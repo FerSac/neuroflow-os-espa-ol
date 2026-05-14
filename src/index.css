@@ -5,27 +5,109 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Quicksand", sans-serif;
 
-  --color-primary: #9b8ec4;
-  --color-primary-light: #d4cde8;
-  --color-primary-dark: #6b5e9e;
-  --color-secondary: #f8b4c8;
-  --color-secondary-light: #fce4ec;
-  --color-accent: #81c784;
-  --color-accent-light: #e8f5e9;
-  --color-warning: #ffb74d;
-  --color-warning-light: #fff3e0;
-  --color-danger: #ef5350;
-  --color-danger-light: #ffebee;
-  --color-bg: #faf7f2;
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  --color-primary: var(--primary, #9b8ec4);
+  --color-primary-light: var(--primary-light, #d4cde8);
+  --color-primary-dark: var(--primary-dark, #6b5e9e);
+  --color-secondary: var(--secondary, #f8b4c8);
+  --color-secondary-light: var(--secondary-light, #fce4ec);
+  --color-accent: var(--accent, #81c784);
+  --color-accent-light: var(--accent-light, #e8f5e9);
+  --color-warning: var(--warning, #ffb74d);
+  --color-warning-light: var(--warning-light, #fff3e0);
+  --color-danger: var(--danger, #ef5350);
+  --color-danger-light: var(--danger-light, #ffebee);
+  --color-bg: var(--bg, #faf7f2);
+  --color-text-main: var(--text-main, #3d3450);
+  --color-text-secondary: var(--text-secondary, #7a7089);
+  --color-text-muted: var(--text-muted, #a9a0b5);
+  --color-border-main: var(--border-main, #e8e0f0);
+  --color-card: var(--bg-card, #ffffff);
+  --color-hover: var(--bg-hover, #f5f0eb);
+}
+
+:root {
+  --primary: #9b8ec4;
+  --primary-light: #d4cde8;
+  --primary-dark: #6b5e9e;
+  --secondary: #f8b4c8;
+  --secondary-light: #fce4ec;
+  --accent: #81c784;
+  --accent-light: #e8f5e9;
+  --warning: #ffb74d;
+  --warning-light: #fff3e0;
+  --danger: #ef5350;
+  --danger-light: #ffebee;
+  --bg: #faf7f2;
+  --text-main: #3d3450;
+  --text-secondary: #7a7089;
+  --text-muted: #a9a0b5;
+  --border-main: #e8e0f0;
+  --bg-card: #ffffff;
+  --bg-hover: #f5f0eb;
+}
+
+.boho {
+  --primary: #c4956a;
+  --primary-light: #f3e5d8;
+  --primary-dark: #8c603e;
+  --secondary: #d4a373;
+  --secondary-light: #fefae0;
+  --accent: #a3b18a;
+  --accent-light: #dad7cd;
+  --bg: #f9f7f1;
+  --text-main: #5d4037;
+  --text-secondary: #8d6e63;
+  --text-muted: #bcaaa4;
+}
+
+.minimal {
+  --primary: #333333;
+  --primary-light: #f5f5f5;
+  --primary-dark: #000000;
+  --secondary: #666666;
+  --secondary-light: #eeeeee;
+  --accent: #444444;
+  --accent-light: #f0f0f0;
+  --bg: #ffffff;
+  --text-main: #1a1a1a;
+  --text-secondary: #4a4a4a;
+  --text-muted: #7a7a7a;
+}
+
+.dark {
+  --primary: #a78bfa;
+  --primary-light: #2d2d2d;
+  --primary-dark: #c4b5fd;
+  --secondary: #fb7185;
+  --secondary-light: #312e81;
+  --accent: #34d399;
+  --accent-light: #064e3b;
+  --bg: #0f172a;
+  --bg-card: #1e293b;
+  --bg-hover: #334155;
+  --text-main: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-main: #334155;
+}
+
+.dark body {
+  color: var(--text-main);
+}
+
+.dark .card {
+  @apply bg-card border-border-main;
 }
 
 body {
-  @apply bg-bg text-[#3d3450] font-sans;
+  @apply bg-bg text-[var(--text-main)] font-sans transition-colors duration-500;
 }
 
 @layer components {
   .card {
-    @apply bg-white border border-[#e8e0f0] rounded-2xl p-5 mb-4 shadow-sm transition-all duration-300 hover:shadow-md;
+    @apply bg-card border border-border-main rounded-2xl p-5 mb-4 shadow-sm transition-all duration-300 hover:shadow-md;
   }
   
   .btn {

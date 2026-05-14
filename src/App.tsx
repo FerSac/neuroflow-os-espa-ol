@@ -22,6 +22,7 @@ import {
   Users, 
   Trophy, 
   Plane, 
+  Calendar,
   Settings,
   Menu,
   Bell,
@@ -38,12 +39,17 @@ import {
   Upload,
   Database,
   AlertTriangle,
-  FileJson
+  FileJson,
+  Lightbulb,
+  Globe,
+  Palette,
+  Layout
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { useAppState } from './hooks/useAppState';
 import { View, Task, Priority, Category, INITIAL_STATE, Win } from './types';
+import { translations, Language } from './lib/translations';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -105,7 +111,7 @@ const SidebarItem = ({
       "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200 text-sm font-medium",
       active 
         ? "bg-linear-to-br from-primary-light to-secondary-light text-primary-dark font-semibold" 
-        : "text-[#7a7089] hover:bg-[#f5f0eb] hover:text-[#3d3450]"
+        : "text-text-secondary hover:bg-hover hover:text-text-main"
     )}
   >
     <Icon className="w-5 h-5" />
@@ -119,12 +125,30 @@ const SidebarItem = ({
 );
 
 export default function App() {
-  const [state, setState] = useAppState();
+  const [state, setState, resetStorage] = useAppState();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notifPanelOpen, setNotifPanelOpen] = useState(false);
+
+  const t = useCallback((key: string): string => {
+    const lang = (state.settings.language as Language) || 'es';
+    return (translations[lang] as any)[key] || key;
+  }, [state.settings.language]);
 
   useEffect(() => {
     document.documentElement.className = state.settings.theme;
   }, [state.settings.theme]);
+
+  // Focus Guardian (90m Reminder)
+  useEffect(() => {
+    if (!state.settings.hyperfocusGuard) return;
+
+    const interval = setInterval(() => {
+      if (state.settings.sounds) playSound(880, 'square', 0.3);
+      alert(t('focusGuardianAlert') || "🧠 Guardián de Enfoque: Llevas 90 minutos trabajando. ¡Tómate un respiro de 5 minutos!");
+    }, 90 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [state.settings.hyperfocusGuard, state.settings.sounds, t]);
 
   const navigateTo = (view: View) => {
     setState(prev => ({ ...prev, currentView: view }));
@@ -132,6 +156,67 @@ export default function App() {
   };
 
   const getActiveTasksCount = () => state.tasks.filter(t => !t.completed).length;
+
+  const getNotifications = () => {
+    const list = [];
+    const today = new Date().toDateString();
+    
+    if (!state.dailyPriority) {
+      list.push({
+        title: t('definePriority'),
+        desc: t('definePriorityDesc'),
+        icon: Target,
+        color: 'text-primary',
+        action: () => navigateTo('morning')
+      });
+    }
+
+    const medsTaken = state.meds.some((m: any) => m.log[today]);
+    if (state.meds.length > 0 && !medsTaken) {
+      list.push({
+        title: t('medsCheck'),
+        desc: t('medsCheckDesc'),
+        icon: Pill,
+        color: 'text-danger',
+        action: () => navigateTo('meds')
+      });
+    }
+
+    if (state.energyToday <= 3) {
+      list.push({
+        title: t('criticalEnergy'),
+        desc: t('criticalEnergyDesc'),
+        icon: Zap,
+        color: 'text-warning',
+        action: () => navigateTo('rescue')
+      });
+    }
+
+    const pendingTasks = state.tasks.filter(t => !t.completed).length;
+    if (pendingTasks > 5) {
+      list.push({
+        title: t('overloadDetected'),
+        desc: t('overloadDetectedDesc').replace('{n}', pendingTasks.toString()),
+        icon: AlertCircle,
+        color: 'text-accent',
+        action: () => navigateTo('tasks')
+      });
+    }
+
+    // Dynamic Tips
+    const tips = t('tips') as unknown as string[];
+    const tipIndex = (new Date().getDate()) % tips.length;
+    
+    list.push({
+      title: t('dailyStrategy'),
+      desc: tips[tipIndex],
+      icon: Lightbulb,
+      color: 'text-warning',
+      action: () => {}
+    });
+
+    return list;
+  };
 
   return (
     <div className="flex min-h-screen">
@@ -150,7 +235,7 @@ export default function App() {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 w-64 bg-white border-r border-[#e8e0f0] p-5 z-50 transition-transform duration-300 md:translate-x-0",
+        "fixed inset-y-0 left-0 w-64 bg-card border-r border-border-main p-5 z-50 transition-transform duration-300 md:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex items-center gap-3 mb-8 px-2">
@@ -158,57 +243,57 @@ export default function App() {
             🧠
           </div>
           <div>
-            <div className="font-display font-bold text-[#3d3450]">NeuroFlow OS</div>
-            <div className="text-[10px] text-[#a9a0b5] font-normal uppercase tracking-wider">ADHD Command Centre</div>
+            <div className="font-display font-bold text-text-main">NeuroFlow OS</div>
+            <div className="text-[10px] text-text-muted font-normal uppercase tracking-wider">{t('adhdCommandCentre') || 'ADHD Command Centre'}</div>
           </div>
         </div>
 
         <nav className="space-y-6 overflow-y-auto max-h-[calc(100vh-120px)] pr-1 scrollbar-thin">
           <div>
-            <div className="text-[10px] font-bold text-[#a9a0b5] uppercase tracking-widest px-3 mb-2">Principal</div>
+            <div className="text-[10px] font-bold text-text-muted uppercase tracking-widest px-3 mb-2">{t('principal')}</div>
             <ul className="space-y-1">
-              <SidebarItem icon={LayoutDashboard} label="Panel General" active={state.currentView === 'dashboard'} onClick={() => navigateTo('dashboard')} />
-              <SidebarItem icon={Rocket} label="Inicio Matutino" active={state.currentView === 'morning'} onClick={() => navigateTo('morning')} />
-              <SidebarItem icon={Target} label="Tareas" active={state.currentView === 'tasks'} onClick={() => navigateTo('tasks')} badge={getActiveTasksCount()} />
-              <SidebarItem icon={Timer} label="Reloj de Enfoque" active={state.currentView === 'timer'} onClick={() => navigateTo('timer')} />
+              <SidebarItem icon={LayoutDashboard} label={t('dashboard')} active={state.currentView === 'dashboard'} onClick={() => navigateTo('dashboard')} />
+              <SidebarItem icon={Rocket} label={t('morning')} active={state.currentView === 'morning'} onClick={() => navigateTo('morning')} />
+              <SidebarItem icon={Target} label={t('tasks')} active={state.currentView === 'tasks'} onClick={() => navigateTo('tasks')} badge={getActiveTasksCount()} />
+              <SidebarItem icon={Timer} label={t('timer')} active={state.currentView === 'timer'} onClick={() => navigateTo('timer')} />
             </ul>
           </div>
 
           <div>
-            <div className="text-[10px] font-bold text-[#a9a0b5] uppercase tracking-widest px-3 mb-2">Cerebro</div>
+            <div className="text-[10px] font-bold text-text-muted uppercase tracking-widest px-3 mb-2">{t('brainSection')}</div>
             <ul className="space-y-1">
-              <SidebarItem icon={Brain} label="Vaciado Mental" active={state.currentView === 'braindump'} onClick={() => navigateTo('braindump')} />
-              <SidebarItem icon={Zap} label="Rastreador de Energía" active={state.currentView === 'energy'} onClick={() => navigateTo('energy')} />
-              <SidebarItem icon={XOctagon} label="Filtro de Impulsos" active={state.currentView === 'impulse'} onClick={() => navigateTo('impulse')} />
+              <SidebarItem icon={Brain} label={t('braindump')} active={state.currentView === 'braindump'} onClick={() => navigateTo('braindump')} />
+              <SidebarItem icon={Zap} label={t('energy')} active={state.currentView === 'energy'} onClick={() => navigateTo('energy')} />
+              <SidebarItem icon={XOctagon} label={t('impulse')} active={state.currentView === 'impulse'} onClick={() => navigateTo('impulse')} />
             </ul>
           </div>
 
           <div>
-            <div className="text-[10px] font-bold text-[#a9a0b5] uppercase tracking-widest px-3 mb-2">Bienestar</div>
+            <div className="text-[10px] font-bold text-text-muted uppercase tracking-widest px-3 mb-2">{t('wellness')}</div>
             <ul className="space-y-1">
-              <SidebarItem icon={Gamepad2} label="Menú de Dopamina" active={state.currentView === 'dopamine'} onClick={() => navigateTo('dopamine')} />
-              <SidebarItem icon={RefreshCw} label="Hábitos" active={state.currentView === 'habits'} onClick={() => navigateTo('habits')} />
-              <SidebarItem icon={Moon} label="Ciclo Hormonal" active={state.currentView === 'cycle'} onClick={() => navigateTo('cycle')} />
-              <SidebarItem icon={Pill} label="Medicación y Salud" active={state.currentView === 'meds'} onClick={() => navigateTo('meds')} />
-              <SidebarItem icon={CloudMoon} label="Sueño" active={state.currentView === 'sleep'} onClick={() => navigateTo('sleep')} />
+              <SidebarItem icon={Gamepad2} label={t('dopamine')} active={state.currentView === 'dopamine'} onClick={() => navigateTo('dopamine')} />
+              <SidebarItem icon={RefreshCw} label={t('habits')} active={state.currentView === 'habits'} onClick={() => navigateTo('habits')} />
+              <SidebarItem icon={Moon} label={t('cycle')} active={state.currentView === 'cycle'} onClick={() => navigateTo('cycle')} />
+              <SidebarItem icon={Pill} label={t('meds')} active={state.currentView === 'meds'} onClick={() => navigateTo('meds')} />
+              <SidebarItem icon={CloudMoon} label={t('sleep')} active={state.currentView === 'sleep'} onClick={() => navigateTo('sleep')} />
             </ul>
           </div>
 
           <div>
-            <div className="text-[10px] font-bold text-[#a9a0b5] uppercase tracking-widest px-3 mb-2">Rescate</div>
+            <div className="text-[10px] font-bold text-text-muted uppercase tracking-widest px-3 mb-2">{t('rescueSection')}</div>
             <ul className="space-y-1">
-              <SidebarItem icon={AlertCircle} label="Botón de Rescate" active={state.currentView === 'rescue'} onClick={() => navigateTo('rescue')} />
-              <SidebarItem icon={ShieldCheck} label="Escudo RSD" active={state.currentView === 'rsd'} onClick={() => navigateTo('rsd')} />
-              <SidebarItem icon={Users} label="Socio de Trabajo" active={state.currentView === 'bodydouble'} onClick={() => navigateTo('bodydouble')} />
+              <SidebarItem icon={AlertCircle} label={t('rescue')} active={state.currentView === 'rescue'} onClick={() => navigateTo('rescue')} />
+              <SidebarItem icon={ShieldCheck} label={t('rsd')} active={state.currentView === 'rsd'} onClick={() => navigateTo('rsd')} />
+              <SidebarItem icon={Users} label={t('bodydouble')} active={state.currentView === 'bodydouble'} onClick={() => navigateTo('bodydouble')} />
             </ul>
           </div>
 
           <div>
-            <div className="text-[10px] font-bold text-[#a9a0b5] uppercase tracking-widest px-3 mb-2">Más</div>
+            <div className="text-[10px] font-bold text-text-muted uppercase tracking-widest px-3 mb-2">{t('more')}</div>
             <ul className="space-y-1">
-              <SidebarItem icon={Trophy} label="Diario de Victorias" active={state.currentView === 'wins'} onClick={() => navigateTo('wins')} />
-              <SidebarItem icon={Plane} label="Kit de Viaje" active={state.currentView === 'travel'} onClick={() => navigateTo('travel')} />
-              <SidebarItem icon={Settings} label="Ajustes" active={state.currentView === 'settings'} onClick={() => navigateTo('settings')} />
+              <SidebarItem icon={Trophy} label={t('wins')} active={state.currentView === 'wins'} onClick={() => navigateTo('wins')} />
+              <SidebarItem icon={Plane} label={t('travel')} active={state.currentView === 'travel'} onClick={() => navigateTo('travel')} />
+              <SidebarItem icon={Settings} label={t('settings')} active={state.currentView === 'settings'} onClick={() => navigateTo('settings')} />
             </ul>
           </div>
         </nav>
@@ -216,50 +301,116 @@ export default function App() {
 
       {/* Main Content */}
       <main className="flex-1 md:ml-64 p-4 md:p-8 transition-all duration-300">
-        <header className="flex items-center justify-between mb-8 pb-4 border-b border-[#e8e0f0]">
+        <header className="flex items-center justify-between mb-8 pb-4 border-b border-border-main">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setSidebarOpen(true)}
-              className="md:hidden p-2 hover:bg-[#f5f0eb] rounded-lg"
+              className="md:hidden p-2 hover:bg-hover rounded-lg"
             >
               <Menu className="w-6 h-6" />
             </button>
             <div>
-              <h1 className="text-2xl font-display font-bold text-[#3d3450] capitalize">
-                {state.currentView === 'dashboard' ? 'Vista General' : state.currentView === 'braindump' ? 'Vaciado Mental' : state.currentView === 'bodydouble' ? 'Socio de Trabajo' : state.currentView.replace(/([A-Z])/g, ' $1')}
+              <h1 className="text-2xl font-display font-bold text-text-main capitalize">
+                {t(`viewTitle_${state.currentView}`) || state.currentView.replace(/([A-Z])/g, ' $1')}
               </h1>
-              <p className="text-xs text-[#a9a0b5]">
-                {getViewSubtitle(state.currentView)}
+              <p className="text-xs text-text-muted">
+                {t(`viewSubtitle_${state.currentView}`)}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <div 
-              className="hidden sm:flex items-center gap-3 bg-white border border-[#e8e0f0] px-4 py-2 rounded-2xl cursor-pointer hover:bg-[#f5f0eb]"
+              className="hidden sm:flex items-center gap-3 bg-card border border-border-main px-4 py-2 rounded-2xl cursor-pointer hover:bg-hover"
               onClick={() => navigateTo('energy')}
             >
               <Zap className="w-4 h-4 text-warning" />
-              <div className="w-16 h-1.5 bg-[#e8e0f0] rounded-full overflow-hidden">
+              <div className="w-16 h-1.5 bg-border-main rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-linear-to-r from-danger via-warning to-accent transition-all duration-500" 
                   style={{ width: `${state.energyToday * 10}%` }}
                 />
               </div>
-              <span className="text-xs font-bold">{state.energyToday}/10</span>
+              <span className="text-xs font-bold text-text-main">{state.energyToday}/10</span>
             </div>
 
             <button 
               onClick={() => navigateTo('rescue')}
-              className="w-10 h-10 border border-[#e8e0f0] bg-white rounded-xl flex items-center justify-center hover:bg-[#f5f0eb] text-danger"
+              className="w-10 h-10 border border-border-main bg-card rounded-xl flex items-center justify-center hover:bg-hover text-danger shadow-sm"
             >
               <AlertCircle className="w-5 h-5" />
             </button>
             
-            <button className="relative w-10 h-10 border border-[#e8e0f0] bg-white rounded-xl flex items-center justify-center hover:bg-[#f5f0eb]">
-              <Bell className="w-5 h-5" />
-              <div className="absolute top-2 right-2 w-2 h-2 bg-danger border-2 border-white rounded-full" />
-            </button>
+            <div className="relative">
+              <button 
+                onClick={() => setNotifPanelOpen(!notifPanelOpen)}
+                className={cn(
+                  "relative w-10 h-10 border border-border-main bg-card rounded-xl flex items-center justify-center hover:bg-hover shadow-sm transition-all focus:ring-2 focus:ring-primary/40 outline-none",
+                  notifPanelOpen && "ring-2 ring-primary border-primary"
+                )}
+                title={t('notifCenterTitle') || 'Centro de Notificaciones y Consejos'}
+              >
+                <Bell className={cn("w-5 h-5 transition-colors", getNotifications().length > 0 ? "text-primary fill-primary/10 animate-pulse-slow" : "text-text-muted")} />
+                {getNotifications().length > 0 && (
+                  <div className="absolute top-2.5 right-2.5 w-2 h-2 bg-danger border-2 border-card rounded-full shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                )}
+              </button>
+
+              <AnimatePresence>
+                {notifPanelOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40 bg-black/5" onClick={() => setNotifPanelOpen(false)} />
+                    <motion.div 
+                      initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-3 w-80 bg-card border border-border-main rounded-2xl shadow-xl z-50 overflow-hidden ring-1 ring-black/5"
+                    >
+                      <div className="p-4 border-b border-border-main bg-linear-to-r from-primary/10 to-secondary/10 font-display font-bold text-sm text-text-main flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Rocket className="w-4 h-4 text-primary" />
+                          <span>{t('notifTitle') || 'Recomendaciones'}</span>
+                        </div>
+                        <button onClick={() => setNotifPanelOpen(false)} className="text-text-muted hover:text-text-main p-1 hover:bg-hover rounded-md transition-colors"><Plus className="w-4 h-4 rotate-45" /></button>
+                      </div>
+                      <div className="max-h-96 overflow-y-auto p-2 space-y-1 custom-scrollbar">
+                        {getNotifications().length > 0 ? getNotifications().map((notif, i) => (
+                          <div 
+                            key={i} 
+                            onClick={() => { notif.action(); setNotifPanelOpen(false); }}
+                            className="flex gap-3 p-3 rounded-xl hover:bg-hover cursor-pointer transition-all border border-transparent hover:border-border-main/50 group bg-card"
+                          >
+                            <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-xs", notif.color.replace('text-', 'bg-') + '/10', notif.color)}>
+                              <notif.icon className="w-4.5 h-4.5" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-xs font-bold text-text-main group-hover:text-primary transition-colors flex items-center justify-between">
+                                {notif.title}
+                                <ChevronRight className="w-3 h-3 text-text-muted group-hover:translate-x-0.5 transition-transform" />
+                              </div>
+                              <div className="text-[10px] text-text-secondary leading-tight mt-0.5">{notif.desc}</div>
+                            </div>
+                          </div>
+                        )) : (
+                          <div className="text-center py-12 px-4">
+                            <div className="w-12 h-12 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary/10">
+                              <CheckCircle2 className="w-6 h-6 text-primary/40" />
+                            </div>
+                            <p className="text-[11px] text-text-muted uppercase font-bold tracking-widest">{t('clearMind') || 'Mente Despejada'}</p>
+                            <p className="text-[10px] text-text-secondary mt-1">{t('noNotifs') || 'No hay recordatorios pendientes por ahora.'}</p>
+                          </div>
+                        )}
+                      </div>
+                      {getNotifications().length > 0 && (
+                        <div className="p-3 bg-hover/30 border-t border-border-main text-center">
+                           <p className="text-[9px] text-text-muted italic">{t('notifDisclaimer') || 'Estas sugerencias se basan en tu estado actual'}</p>
+                        </div>
+                      )}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </header>
 
@@ -271,7 +422,7 @@ export default function App() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
-            {renderView(state, setState, navigateTo)}
+            {renderView(state, setState, navigateTo, resetStorage, t)}
           </motion.div>
         </AnimatePresence>
       </main>
@@ -279,49 +430,26 @@ export default function App() {
   );
 }
 
-function getViewSubtitle(view: View): string {
-  const subtitles: Record<View, string> = {
-    dashboard: 'Tu centro de operaciones diario',
-    morning: 'Ritual de 5 minutos para empezar con enfoque',
-    tasks: 'Gestiona tus tareas sin abrumarte',
-    timer: 'Sesiones de enfoque adaptativo',
-    braindump: 'Vacía tu mente al instante',
-    energy: 'Mapea tu ritmo biológico',
-    impulse: 'Filtro de consciencia antes de actuar',
-    dopamine: 'Boosters saludables para tu ADHD brain',
-    habits: 'Progreso real, no perfección',
-    cycle: 'Productividad cíclica hormonal',
-    meds: 'Punto de control de medicación y salud',
-    sleep: 'Prepara tu descanso ideal',
-    rescue: 'Botón de pausa para momentos críticos',
-    rsd: 'Protección contra el ruido emocional',
-    bodydouble: 'Compañía virtual para tareas difíciles',
-    wins: 'Celebra cada pequeña conquista',
-    travel: 'Que no se te olvide nada importante',
-    settings: 'Personaliza tu entorno de NeuroFlow'
-  };
-  return subtitles[view] || 'Gestión neurodivergente';
-}
 
-const MorningLaunchView = ({ state, setState, navigateTo }: any) => {
+const MorningLaunchView = ({ state, setState, navigateTo, t }: any) => {
   const [step, setStep] = useState(0);
 
   const nextStep = () => setStep(s => s + 1);
 
   const steps = [
-    { title: 'Respira', desc: 'Toma 3 respiraciones profundas. Inhala 4s, mantén 4s, exhala 4s.', emoji: '🌬️' },
-    { title: 'Medicación', desc: '¿Has tomado tu medicación hoy?', emoji: '💊' },
-    { title: 'Prioridad', desc: 'Si solo pudieras hacer UNA cosa hoy, ¿qué sería?', emoji: '🎯' },
-    { title: 'Ritual', desc: 'Elige tu ritual de inicio (Música, café, estiramiento)', emoji: '✨' }
+    { title: t('morningStep1Title'), desc: t('morningStep1Desc'), emoji: '🌬️' },
+    { title: t('morningStep2Title'), desc: t('morningStep2Desc'), emoji: '💊' },
+    { title: t('morningStep3Title'), desc: t('morningStep3Desc'), emoji: '🎯' },
+    { title: t('morningStep4Title'), desc: t('morningStep4Desc'), emoji: '✨' }
   ];
 
   if (step >= steps.length) {
     return (
       <div className="card text-center p-12">
         <div className="text-5xl mb-6">🚀</div>
-        <h2 className="text-2xl font-display font-bold mb-2">¡Todo listo!</h2>
-        <p className="text-[#7a7089] mb-8">Tu día empieza con claridad. Tu prioridad: <strong>{state.dailyPriority}</strong></p>
-        <button onClick={() => navigateTo('dashboard')} className="btn btn-primary btn-lg w-full">Comenzar el día</button>
+        <h2 className="text-2xl font-display font-bold mb-2">{t('morningCompleteTitle')}</h2>
+        <p className="text-text-secondary mb-8">{t('morningCompleteDesc').replace('{p}', state.dailyPriority)}</p>
+        <button onClick={() => navigateTo('dashboard')} className="btn btn-primary btn-lg w-full">{t('morningCompleteButton')}</button>
       </div>
     );
   }
@@ -330,7 +458,7 @@ const MorningLaunchView = ({ state, setState, navigateTo }: any) => {
     <div className="max-w-xl mx-auto py-8">
       <div className="flex justify-center gap-2 mb-8">
         {steps.map((_, i) => (
-          <div key={i} className={cn("w-full h-1.5 rounded-full transition-all duration-500", i <= step ? "bg-primary" : "bg-[#e8e0f0]")} />
+          <div key={i} className={cn("w-full h-1.5 rounded-full transition-all duration-500", i <= step ? "bg-primary" : "bg-border-main")} />
         ))}
       </div>
 
@@ -346,12 +474,12 @@ const MorningLaunchView = ({ state, setState, navigateTo }: any) => {
           </motion.div>
         </div>
         <h2 className="text-xl font-display font-bold mb-4">{steps[step].title}</h2>
-        <p className="text-[#a9a0b5] mb-8">{steps[step].desc}</p>
+        <p className="text-text-muted mb-8">{steps[step].desc}</p>
 
         {step === 1 && (
           <div className="flex gap-4 mb-8">
-            <button onClick={nextStep} className="btn flex-1 btn-primary">Sí, ya la tomé</button>
-            <button onClick={nextStep} className="btn flex-1 btn-secondary">Aún no</button>
+            <button onClick={nextStep} className="btn flex-1 btn-primary">{t('morningStep2Yes')}</button>
+            <button onClick={nextStep} className="btn flex-1 btn-secondary">{t('morningStep2No')}</button>
           </div>
         )}
 
@@ -360,7 +488,7 @@ const MorningLaunchView = ({ state, setState, navigateTo }: any) => {
             <input 
               autoFocus
               className="w-full text-center text-xl font-display font-bold border-b-2 border-primary-light outline-none py-2 focus:border-primary transition-all"
-              placeholder="Escribe tu prioridad..."
+              placeholder={t('morningStep3Placeholder')}
               value={state.dailyPriority}
               onChange={e => setState((prev: any) => ({ ...prev, dailyPriority: e.target.value }))}
             />
@@ -368,20 +496,20 @@ const MorningLaunchView = ({ state, setState, navigateTo }: any) => {
         )}
 
         {step !== 1 && (
-          <button onClick={nextStep} className="btn btn-primary btn-lg w-full">Siguiente →</button>
+          <button onClick={nextStep} className="btn btn-primary btn-lg w-full">{t('next') || 'Siguiente →'}</button>
         )}
       </motion.div>
     </div>
   );
 };
 
-const OverwhelmRescueView = ({ state }: any) => {
+const OverwhelmRescueView = ({ state, t }: any) => {
   const [step, setStep] = useState(0);
   const steps = [
-    { title: '🧘 Grounding 5-4-3-2-1', desc: 'Nombra: 5 cosas que ves, 4 que puedes tocar, 3 que oyes, 2 que hueles, 1 que saboreas.' },
-    { title: '🌬️ Respiración Guiada', desc: 'Inhala 4s → Mantén 4s → Exhala 6s. Repite 3 veces.' },
-    { title: '❄️ Congela todo', desc: 'No necesitas hacer nada AHORA. Es ok pausar todo.' },
-    { title: '🎯 Micro-Win', desc: 'Haz algo absurdamente pequeño: bebe un trago de agua.' }
+    { title: t('rescueStep1Title'), desc: t('rescueStep1Desc') },
+    { title: t('rescueStep2Title'), desc: t('rescueStep2Desc') },
+    { title: t('rescueStep3Title'), desc: t('rescueStep3Desc') },
+    { title: t('rescueStep4Title'), desc: t('rescueStep4Desc') }
   ];
 
   const handleComplete = (i: number) => {
@@ -391,11 +519,11 @@ const OverwhelmRescueView = ({ state }: any) => {
 
   return (
     <div className="max-w-xl mx-auto space-y-4">
-      <div className="card border-2 border-danger bg-danger-light text-center py-10">
-        <AlertCircle className="w-12 h-12 mx-auto text-danger mb-4" />
-        <h2 className="text-2xl font-display font-bold text-danger">Modo Rescate</h2>
-        <p className="text-danger opacity-80">Sigue los pasos a tu ritmo. No hay prisa.</p>
-      </div>
+          <div className="card border-2 border-danger-light bg-danger/5 text-center py-10">
+            <AlertCircle className="w-12 h-12 mx-auto text-danger mb-4" />
+            <h2 className="text-2xl font-display font-bold text-danger">{t('rescueModeTitle')}</h2>
+            <p className="text-danger opacity-80">{t('rescueModeDesc')}</p>
+          </div>
 
       {steps.map((s, i) => (
         <div key={i} className={cn(
@@ -404,19 +532,19 @@ const OverwhelmRescueView = ({ state }: any) => {
         )}>
           <div className={cn(
             "w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0",
-            step > i ? "bg-accent text-white" : "bg-primary text-white"
+            step > i ? "bg-accent text-white" : "bg-primary text-white shadow-sm"
           )}>
             {step > i ? '✓' : i + 1}
           </div>
           <div className="flex-1">
-            <h4 className="font-bold text-[#3d3450] mb-1">{s.title}</h4>
-            <p className="text-xs text-[#7a7089] mb-4">{s.desc}</p>
+            <h4 className="font-bold text-text-main mb-1">{s.title}</h4>
+            <p className="text-xs text-text-secondary mb-4">{s.desc}</p>
             {step === i && (
               <button 
                 onClick={() => handleComplete(i)}
                 className="btn btn-primary btn-sm"
               >
-                Completado
+                {t('rescueStepComplete')}
               </button>
             )}
           </div>
@@ -425,18 +553,18 @@ const OverwhelmRescueView = ({ state }: any) => {
 
       {step >= steps.length && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-6">
-          <p className="text-accent font-bold text-lg mb-4">💚 Lo lograste. Estás a salvo.</p>
+          <p className="text-accent font-bold text-lg mb-4">{t('rescueAllDone')}</p>
           <button onClick={() => {
               setStep(0);
               if (state.settings.confetti) triggerConfetti();
-          }} className="btn btn-secondary text-sm">Reiniciar protocolo</button>
+          }} className="btn btn-secondary text-sm">{t('rescueRestart')}</button>
         </motion.div>
       )}
     </div>
   );
 };
 
-const EnergyTrackerView = ({ state, setState }: any) => {
+const EnergyTrackerView = ({ state, setState, t }: any) => {
   const updateEnergy = (val: number) => {
     setState((prev: any) => ({ ...prev, energyToday: val }));
   };
@@ -463,7 +591,7 @@ const EnergyTrackerView = ({ state, setState }: any) => {
   return (
     <div className="space-y-6">
       <div className="card text-center p-10">
-        <h3 className="font-display font-bold mb-6">¿Cuánta energía tienes AHORA?</h3>
+        <h3 className="font-display font-bold mb-6">{t('energyAsk')}</h3>
         <div className="flex items-center justify-center gap-6 mb-8">
           <span className="text-2xl">😫</span>
           <input 
@@ -471,32 +599,39 @@ const EnergyTrackerView = ({ state, setState }: any) => {
             min="1" max="10" 
             value={state.energyToday} 
             onChange={(e) => updateEnergy(parseInt(e.target.value))}
-            className="w-full max-w-xs accent-primary"
+            className="w-full max-w-xs accent-primary cursor-pointer"
           />
           <span className="text-2xl">🚀</span>
         </div>
         <div className="text-6xl font-display font-bold text-primary mb-4">{state.energyToday}</div>
-        <button onClick={logEnergy} className="btn btn-primary px-8">Registrar Energía</button>
+        <button onClick={logEnergy} className="btn btn-primary px-8">{t('energyRegister')}</button>
       </div>
 
       <div className="card">
         <h3 className="font-display font-bold mb-6 flex items-center gap-2">
-          <Zap className="w-5 h-5 text-warning" /> Historial de Energía
+          <Zap className="w-5 h-5 text-warning" /> {t('energyHistoryTitle')}
         </h3>
-        <div className="flex items-end gap-2 h-40 pt-4">
+        <div className="flex items-end gap-3 h-48 pt-4 px-2">
           {state.energyLogs.slice(-7).map((log: any, i: number) => (
-            <div key={i} className="flex-1 flex flex-col items-center gap-2">
-              <div 
-                className="w-full bg-primary-light rounded-t-lg transition-all duration-500" 
-                style={{ height: `${log.value * 10}%` }}
+            <div key={i} className="flex-1 flex flex-col justify-end h-full group relative">
+              <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-text-main text-bg text-[10px] px-2 py-1 rounded-md pointer-events-none mb-1">
+                {log.value}/10
+              </div>
+              <motion.div 
+                initial={{ height: 0 }}
+                animate={{ height: `${Math.max(log.value * 10, 5)}%` }}
+                className="w-full bg-linear-to-t from-primary/30 to-primary rounded-t-lg transition-all duration-700 ease-out hover:from-primary/50" 
               />
-              <span className="text-[10px] text-[#a9a0b5] font-bold">
+              <span className="text-[10px] text-text-muted font-bold text-center mt-3 truncate">
                 {new Date(log.date).toLocaleDateString([], { weekday: 'short' })}
               </span>
             </div>
           ))}
           {state.energyLogs.length === 0 && (
-            <div className="w-full text-center text-[#a9a0b5] py-10 text-xs">Sin registros aún</div>
+            <div className="w-full text-center text-text-muted py-20 text-xs flex flex-col items-center gap-2">
+              <Database className="w-8 h-8 opacity-20" />
+              {t('energyHistoryEmpty')}
+            </div>
           )}
         </div>
       </div>
@@ -504,25 +639,25 @@ const EnergyTrackerView = ({ state, setState }: any) => {
   );
 };
 
-const DopamineMenuView = ({ state, setState }: any) => {
+const DopamineMenuView = ({ state, setState, t }: any) => {
   const activities = [
-    { emoji: '🧘', name: 'Estiramientos Rápidos', desc: '2 minutos de movimiento', time: '2 min' },
-    { emoji: '💃', name: 'Bailar 1 Canción', desc: 'Tu canción favorita', time: '3 min' },
-    { emoji: '🌬️', name: 'Respiración 4-7-8', desc: 'Calma inmediata', time: '2 min' },
-    { emoji: '🎨', name: 'Doodle / Arte Libre', desc: 'Garabatea sin pensar', time: '5 min' },
-    { emoji: '🚶', name: 'Caminata Corta', desc: 'Al aire libre si es posible', time: '15 min' },
-    { emoji: '📦', name: 'Organizar un Cajón', desc: 'Satisfacción instantánea', time: '10 min' }
+    { emoji: '🧘', name: t('dopamine_stretches'), desc: t('dopamine_stretches_desc'), time: '2 min' },
+    { emoji: '💃', name: t('dopamine_dance'), desc: t('dopamine_dance_desc'), time: '3 min' },
+    { emoji: '🌬️', name: t('dopamine_breathing'), desc: t('dopamine_breathing_desc'), time: '2 min' },
+    { emoji: '🎨', name: t('dopamine_doodle'), desc: t('dopamine_doodle_desc'), time: '5 min' },
+    { emoji: '🚶', name: t('dopamine_walk'), desc: t('dopamine_walk_desc'), time: '15 min' },
+    { emoji: '📦', name: t('dopamine_organize'), desc: t('dopamine_organize_desc'), time: '10 min' }
   ];
 
   return (
     <div className="space-y-6">
       <div className="card">
-        <p className="text-sm text-[#7a7089] mb-6">¿Batería social o mental baja? Elige un booster saludable.</p>
+        <p className="text-sm text-text-secondary mb-6">{t('dopamineAsk')}</p>
         <div className="grid sm:grid-cols-2 gap-3">
           {activities.map((act, i) => (
             <div 
               key={i}
-              className="flex items-center gap-4 p-4 border border-[#e8e0f0] rounded-2xl hover:bg-[#fcfaff] hover:border-primary-light cursor-pointer transition-all group"
+              className="flex items-center gap-4 p-4 border border-border-main rounded-2xl hover:bg-hover hover:border-primary-light cursor-pointer transition-all group bg-card/50"
               onClick={() => {
                 const win: Win = {
                     id: 'win_' + Date.now(),
@@ -537,8 +672,8 @@ const DopamineMenuView = ({ state, setState }: any) => {
             >
               <span className="text-3xl group-hover:scale-110 transition-transform">{act.emoji}</span>
               <div className="flex-1">
-                <div className="text-sm font-bold">{act.name}</div>
-                <div className="text-[10px] text-[#a9a0b5]">{act.desc}</div>
+                <div className="text-sm font-bold text-text-main">{act.name}</div>
+                <div className="text-[10px] text-text-muted">{act.desc}</div>
               </div>
               <span className="text-[10px] font-bold text-primary">{act.time}</span>
             </div>
@@ -549,7 +684,7 @@ const DopamineMenuView = ({ state, setState }: any) => {
   );
 };
 
-const HabitTrackerView = ({ state, setState }: any) => {
+const HabitTrackerView = ({ state, setState, t }: any) => {
   const [newHabitName, setNewHabitName] = useState('');
   const [newHabitEmoji, setNewHabitEmoji] = useState('🌱');
 
@@ -594,25 +729,25 @@ const HabitTrackerView = ({ state, setState }: any) => {
           <input 
             value={newHabitEmoji}
             onChange={e => setNewHabitEmoji(e.target.value)}
-            className="w-12 bg-[#f5f0eb] border-none rounded-xl text-center text-xl outline-none"
+            className="w-12 bg-hover border border-border-main rounded-xl text-center text-xl outline-none"
             maxLength={2}
           />
           <input 
             value={newHabitName}
             onChange={e => setNewHabitName(e.target.value)}
-            placeholder="Nuevo hábito..."
-            className="flex-1 bg-[#f5f0eb] border-none rounded-xl px-4 text-sm font-medium outline-none"
+            placeholder={t('newHabitPlaceholder')}
+            className="flex-1 bg-hover border border-border-main rounded-xl px-4 text-sm font-medium outline-none focus:border-primary transition-all"
           />
-          <button onClick={addHabit} className="btn btn-primary btn-sm">Añadir</button>
+          <button onClick={addHabit} className="btn btn-primary btn-sm">{t('add')}</button>
         </div>
 
         <div className="space-y-4">
           {state.habits.map((habit: any) => (
-            <div key={habit.id} className="flex items-center gap-4 p-4 border border-[#e8e0f0] rounded-2xl">
+            <div key={habit.id} className="flex items-center gap-4 p-4 border border-border-main rounded-2xl bg-card/30">
               <span className="text-2xl">{habit.icon}</span>
               <div className="flex-1">
-                <div className="text-sm font-bold">{habit.name}</div>
-                <div className="text-[10px] text-[#a9a0b5]">🔥 Racha: {habit.streak} días</div>
+                <div className="text-sm font-bold text-text-main">{habit.name}</div>
+                <div className="text-[10px] text-text-muted">{t('habitStreak').replace('{n}', habit.streak)}</div>
               </div>
               <div className="flex gap-1.5">
                 {days.map((d, i) => (
@@ -621,7 +756,7 @@ const HabitTrackerView = ({ state, setState }: any) => {
                     onClick={() => toggleDay(habit.id, i)}
                     className={cn(
                       "w-7 h-7 rounded-lg text-[10px] font-bold border transition-all",
-                      habit.days[i] ? "bg-accent border-accent text-white" : "border-[#e8e0f0] text-[#a9a0b5] hover:border-primary-light"
+                      habit.days[i] ? "bg-accent border-accent text-white" : "border-border-main text-text-muted hover:border-primary-light bg-card"
                     )}
                   >
                     {d}
@@ -630,16 +765,16 @@ const HabitTrackerView = ({ state, setState }: any) => {
               </div>
               <button 
                 onClick={() => setState((prev: any) => ({ ...prev, habits: prev.habits.filter((h: any) => h.id !== habit.id) }))}
-                className="p-2 text-[#a9a0b5] hover:text-danger"
+                className="p-2 text-text-muted hover:text-danger"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
           ))}
           {state.habits.length === 0 && (
-            <div className="text-center py-10 text-[#a9a0b5]">
+            <div className="text-center py-10 text-text-muted">
               <RefreshCw className="w-10 h-10 mx-auto mb-3 opacity-20" />
-              <p className="text-xs">Sin hábitos aún. Empieza con algo pequeño.</p>
+              <p className="text-xs">{t('habitNoHabits')}</p>
             </div>
           )}
         </div>
@@ -648,7 +783,7 @@ const HabitTrackerView = ({ state, setState }: any) => {
   );
 };
 
-const MedsView = ({ state, setState }: any) => {
+const MedsView = ({ state, setState, t }: any) => {
   const [name, setName] = useState('');
   const [dosage, setDosage] = useState('');
 
@@ -658,7 +793,7 @@ const MedsView = ({ state, setState }: any) => {
       id: 'med_' + Date.now(),
       name,
       dosage,
-      frequency: 'Una vez al día',
+      frequency: t('medFrequencyOnce'),
       log: {}
     };
     setState((prev: any) => ({ ...prev, meds: [...prev.meds, med] }));
@@ -688,38 +823,43 @@ const MedsView = ({ state, setState }: any) => {
           <input 
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder="Nombre (ej: Ritalin)"
-            className="bg-[#f5f0eb] border-none rounded-xl px-4 py-2 text-sm font-medium outline-none"
+            placeholder={t('medNamePlaceholder')}
+            className="bg-hover border border-border-main rounded-xl px-4 py-2 text-sm font-medium outline-none focus:border-primary-light"
           />
           <input 
             value={dosage}
             onChange={e => setDosage(e.target.value)}
-            placeholder="Dosis (ej: 20mg)"
-            className="bg-[#f5f0eb] border-none rounded-xl px-4 py-2 text-sm font-medium outline-none"
+            placeholder={t('medDosagePlaceholder')}
+            className="bg-hover border border-border-main rounded-xl px-4 py-2 text-sm font-medium outline-none focus:border-primary-light"
           />
-          <button onClick={addMed} className="col-span-2 btn btn-primary btn-sm">Añadir Medicación</button>
+          <button onClick={addMed} className="col-span-2 btn btn-primary btn-sm">{t('addMedication')}</button>
         </div>
 
         <div className="space-y-3">
-          {state.meds.map((med: any) => (
-            <div key={med.id} className="flex items-center justify-between p-4 border border-[#e8e0f0] rounded-2xl">
+          {state.meds.length === 0 ? (
+            <div className="text-center py-8 text-text-muted">
+              <Pill className="w-8 h-8 mx-auto mb-2 opacity-30" />
+              <p className="text-xs uppercase font-bold tracking-widest">{t('noMeds')}</p>
+            </div>
+          ) : state.meds.map((med: any) => (
+            <div key={med.id} className="flex items-center justify-between p-4 border border-border-main rounded-2xl bg-card/30">
               <div>
-                <div className="text-sm font-bold">{med.name}</div>
-                <div className="text-[10px] text-[#a9a0b5]">{med.dosage} - {med.frequency}</div>
+                <div className="text-sm font-bold text-text-main">{med.name}</div>
+                <div className="text-[10px] text-text-muted">{med.dosage} - {med.frequency}</div>
               </div>
               <div className="flex items-center gap-3">
                 <button 
                   onClick={() => toggleMed(med.id)}
                   className={cn(
                     "w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all",
-                    med.log[today] ? "bg-accent border-accent text-white" : "border-[#e8e0f0] text-[#a9a0b5]"
+                    med.log[today] ? "bg-accent border-accent text-white" : "border-border-main text-text-muted bg-card"
                   )}
                 >
                   {med.log[today] ? <CheckCircle2 className="w-5 h-5" /> : <Pill className="w-5 h-5" />}
                 </button>
                 <button 
                   onClick={() => setState((prev: any) => ({ ...prev, meds: prev.meds.filter((m: any) => m.id !== med.id) }))}
-                  className="p-2 text-[#a9a0b5] hover:text-danger"
+                  className="p-2 text-text-muted hover:text-danger"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -727,9 +867,9 @@ const MedsView = ({ state, setState }: any) => {
             </div>
           ))}
           {state.meds.length === 0 && (
-            <div className="text-center py-10 text-[#a9a0b5]">
+            <div className="text-center py-10 text-text-muted">
               <Pill className="w-10 h-10 mx-auto mb-3 opacity-20" />
-              <p className="text-xs">No hay medicamentos registrados.</p>
+              <p className="text-xs">{t('noMeds')}</p>
             </div>
           )}
         </div>
@@ -738,7 +878,7 @@ const MedsView = ({ state, setState }: any) => {
   );
 };
 
-const WinsJournalView = ({ state, setState }: any) => {
+const WinsJournalView = ({ state, setState, t }: any) => {
   const [text, setText] = useState('');
 
   const addWin = () => {
@@ -759,25 +899,29 @@ const WinsJournalView = ({ state, setState }: any) => {
         <textarea 
           value={text}
           onChange={e => setText(e.target.value)}
-          placeholder="¿Qué lograste hoy? ¡Todo cuenta!"
-          className="w-full bg-[#f5f0eb] border-none rounded-2xl px-4 py-3 text-sm font-medium outline-none min-h-[100px] mb-4"
+          placeholder={t('winPlaceholder')}
+          className="w-full bg-hover border-none rounded-2xl px-4 py-3 text-sm font-medium outline-none min-h-[100px] mb-4 text-text-main"
         />
-        <button onClick={addWin} className="btn btn-primary w-full">Registrar Victoria ✨</button>
+        <button onClick={addWin} className="btn btn-primary w-full">{t('registerWin')}</button>
       </div>
 
       <div className="space-y-3">
         {state.wins.map((win: any) => (
-          <div key={win.id} className="flex gap-4 p-4 bg-white border border-[#e8e0f0] rounded-2xl">
-            <div className="text-2xl pt-1">🏆</div>
+          <div key={win.id} className="flex gap-4 p-4 bg-[var(--bg-card)] border border-border-main rounded-2xl shadow-sm hover:border-primary/30 transition-all group">
+            <div className="text-2xl pt-1 group-hover:scale-110 transition-transform">🏆</div>
             <div className="flex-1">
-              <div className="text-sm font-bold">{win.text}</div>
-              <div className="text-[10px] text-[#a9a0b5] uppercase mt-1">
+              <div className="text-sm font-bold text-text-main leading-tight">{win.text}</div>
+              <div className="text-[10px] text-text-secondary uppercase mt-1 flex items-center gap-2 font-medium tracking-wider">
+                <Calendar className="w-3 h-3 text-primary/60" />
                 {new Date(win.date).toLocaleDateString()} • {new Date(win.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </div>
             </div>
             <button 
-                onClick={() => setState((prev: any) => ({ ...prev, wins: prev.wins.filter((w: any) => w.id !== win.id) }))}
-                className="p-1 text-[#a9a0b5] hover:text-danger"
+                onClick={() => {
+                  if (state.settings.sounds) playSound(200, 'sine', 0.1);
+                  setState((prev: any) => ({ ...prev, wins: prev.wins.filter((w: any) => w.id !== win.id) }));
+                }}
+                className="p-1 px-2 text-text-muted hover:text-danger hover:bg-danger/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -788,48 +932,51 @@ const WinsJournalView = ({ state, setState }: any) => {
   );
 };
 
-const RsdShieldView = ({ state }: any) => {
+const RsdShieldView = ({ state, setState, t }: any) => {
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
-  
-  const affirmations: Record<string, string[]> = {
-    'Rechazo': [
-      "No todo es sobre mí. La mayoría de las veces, la gente está lidiando con sus propias batallas.",
-      "Un silencio no es un rechazo. Puede ser fatiga, olvido o distracción del otro.",
-      "Mi valor no disminuye por la falta de respuesta de alguien."
-    ],
-    'Crítica': [
-      "La crítica es solo información, no una sentencia sobre mi identidad.",
-      "Puedo separar lo que hago de lo que soy.",
-      "Tengo derecho a cometer errores y seguir siendo valioso."
-    ],
-    'Inseguridad': [
-      "Soy suficiente tal como soy, en este momento.",
-      "Mis emociones son válidas, pero no siempre son hechos objetivos.",
-      "Mi cerebro ADHD tiende a amplificar señales negativas; puedo elegir cuestionarlas."
-    ]
+  const [index, setIndex] = useState(0);
+
+  const updateAnswer = (idx: number, val: string) => {
+    const newAnswers = [...(state.rsdAnswers || ['', '', ''])];
+    newAnswers[idx] = val;
+    setState((prev: any) => ({ ...prev, rsdAnswers: newAnswers }));
   };
 
-  const emotions = Object.keys(affirmations);
-  const [index, setIndex] = useState(0);
+  const resetShield = () => {
+    setState((prev: any) => ({ ...prev, rsdAnswers: ['', '', ''] }));
+    setSelectedEmotion(null);
+  };
+  
+  const affirmations: Record<string, string[]> = {
+    'Rechazo': t('rsdAffirmations_Rechazo') as unknown as string[],
+    'Crítica': t('rsdAffirmations_Crítica') as unknown as string[],
+    'Inseguridad': t('rsdAffirmations_Inseguridad') as unknown as string[]
+  };
+
+  const emotions = [
+    { id: 'Rechazo', label: t('rsdRejection') },
+    { id: 'Crítica', label: t('rsdCriticism') },
+    { id: 'Inseguridad', label: t('rsdInsecurity') }
+  ];
 
   const currentAffirmations = selectedEmotion ? affirmations[selectedEmotion] : affirmations['Inseguridad'];
 
   return (
     <div className="space-y-6">
-      <div className="card bg-linear-to-r from-primary-light to-secondary-light border-none text-center p-10 min-h-[300px] flex flex-col justify-center">
+      <div className="card bg-linear-to-r from-primary-light/30 to-secondary-light/30 border-none text-center p-10 min-h-[300px] flex flex-col justify-center">
         <ShieldCheck className="w-12 h-12 mx-auto text-primary mb-6" />
         
         {!selectedEmotion ? (
           <div>
-            <h3 className="font-display font-bold text-lg mb-4 text-primary-dark">¿Cómo te sientes hoy?</h3>
+            <h3 className="font-display font-bold text-lg mb-4 text-text-main">{t('rsdHowFeel')}</h3>
             <div className="flex flex-wrap justify-center gap-2">
               {emotions.map(e => (
                 <button 
-                  key={e}
-                  onClick={() => { setSelectedEmotion(e); setIndex(0); }}
+                  key={e.id}
+                  onClick={() => { setSelectedEmotion(e.id); setIndex(0); }}
                   className="btn btn-secondary btn-sm"
                 >
-                  {e}
+                  {e.label}
                 </button>
               ))}
             </div>
@@ -840,7 +987,7 @@ const RsdShieldView = ({ state }: any) => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <p className="font-display font-medium text-xl text-[#3d3450] italic leading-relaxed mb-8">
+            <p className="font-display font-medium text-xl text-text-main italic leading-relaxed mb-8">
               "{currentAffirmations[index % currentAffirmations.length]}"
             </p>
             <div className="flex justify-center gap-2">
@@ -848,13 +995,13 @@ const RsdShieldView = ({ state }: any) => {
                 onClick={() => setSelectedEmotion(null)}
                 className="btn btn-secondary btn-sm"
               >
-                Volver
+                {t('rsdBack')}
               </button>
               <button 
                 onClick={() => setIndex(index + 1)}
                 className="btn btn-primary btn-sm"
               >
-                Otra afirmación
+                {t('rsdAnotherAffirmation')}
               </button>
             </div>
           </motion.div>
@@ -862,20 +1009,39 @@ const RsdShieldView = ({ state }: any) => {
       </div>
 
       <div className="card">
-        <h3 className="font-display font-bold mb-4">Reality Check (Interactive)</h3>
-        <p className="text-sm text-[#7a7089] mb-4">Usa este filtro cuando sientas que algo fue un ataque personal.</p>
-        <div className="space-y-3">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-border-main">
+          <div>
+            <h3 className="font-display font-bold text-text-main">{t('rsdRealityCheckTitle')}</h3>
+            <p className="text-xs text-text-secondary">{t('rsdRealityCheckSubtitle')}</p>
+          </div>
+          <button 
+            onClick={resetShield}
+            className="p-2 hover:bg-hover rounded-lg text-primary transition-colors flex items-center gap-2 text-xs font-bold"
+            title={t('rsdReset')}
+          >
+            <RotateCcw className="w-4 h-4" /> {t('rsdReset')}
+          </button>
+        </div>
+
+        <div className="space-y-6">
           {[
-            "¿Tengo pruebas reales o es una suposición?",
-            "Si un amigo me contara esto, ¿qué le diría?",
-            "¿Qué otras 3 razones podrían explicar esto?"
+            t('rsdQuestion1'),
+            t('rsdQuestion2'),
+            t('rsdQuestion3'),
           ].map((q, i) => (
-            <div key={i} className="flex gap-3 items-center p-4 bg-[#f5f0eb] rounded-xl group cursor-pointer hover:bg-white border border-transparent hover:border-primary-light transition-all">
-              <div className="w-6 h-6 rounded-full border-2 border-primary-light flex items-center justify-center text-[10px] font-bold text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                {i + 1}
+            <div key={i} className="space-y-2">
+              <div className="flex gap-3 items-center">
+                <div className="w-6 h-6 rounded-full border-2 border-primary-light flex items-center justify-center text-[10px] font-bold text-primary bg-card">
+                  {i + 1}
+                </div>
+                <span className="text-xs font-bold text-text-main">{q}</span>
               </div>
-              <span className="text-xs font-semibold flex-1">{q}</span>
-              <CheckCircle2 className="w-4 h-4 text-accent opacity-0 group-hover:opacity-100" />
+              <textarea
+                value={(state.rsdAnswers || ['', '', ''])[i] || ''}
+                onChange={(e) => updateAnswer(i, e.target.value)}
+                placeholder={t('rsdReflectionPlaceholder')}
+                className="w-full bg-card/50 border border-border-main rounded-xl px-4 py-3 text-sm focus:border-primary-light focus:ring-2 focus:ring-primary-light outline-none min-h-[80px] transition-all resize-none text-text-main"
+              />
             </div>
           ))}
         </div>
@@ -884,7 +1050,10 @@ const RsdShieldView = ({ state }: any) => {
   );
 };
 
-const SettingsView = ({ state, setState }: any) => {
+const SettingsView = ({ state, setState, resetStorage, t }: any) => {
+  const [isResetting, setIsResetting] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
   const toggle = (field: string) => {
     setState((prev: any) => ({
       ...prev,
@@ -896,6 +1065,13 @@ const SettingsView = ({ state, setState }: any) => {
     setState((prev: any) => ({
       ...prev,
       settings: { ...prev.settings, theme }
+    }));
+  };
+
+  const setAppLanguage = (language: string) => {
+    setState((prev: any) => ({
+      ...prev,
+      settings: { ...prev.settings, language }
     }));
   };
 
@@ -917,10 +1093,11 @@ const SettingsView = ({ state, setState }: any) => {
     reader.onload = (event) => {
       try {
         const parsed = JSON.parse(event.target?.result as string);
-        setState(parsed);
-        alert('Datos importados correctamente.');
+        setState({ ...INITIAL_STATE, ...parsed });
+        if (state.settings.sounds) playSound(880, 'sine', 0.2);
+        alert(t('importSuccess') || 'Datos importados correctamente.');
       } catch (err) {
-        alert('Error al importar archivo. Asegúrate de que es un JSON válido.');
+        alert(t('importError') || 'Error al importar archivo. Asegúrate de que es un JSON válido.');
       }
     };
     reader.readAsText(file);
@@ -929,52 +1106,101 @@ const SettingsView = ({ state, setState }: any) => {
   return (
     <div className="space-y-6">
       <div className="card">
-        <h3 className="font-display font-bold mb-6">Apariencia</h3>
+        <h3 className="font-display font-bold mb-6 flex items-center gap-2">
+          <Globe className="w-5 h-5 text-primary" /> {t('language')}
+        </h3>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { id: 'default', label: 'Estándar', colors: 'bg-primary' },
-            { id: 'dark', label: 'Oscuro (Próximamente)', colors: 'bg-[#3d3450]' },
-            { id: 'boho', label: 'Boho', colors: 'bg-[#c4956a]' },
-            { id: 'minimal', label: 'Minimal', colors: 'bg-[#666]' },
-          ].map(t => (
+            { id: 'es', label: 'Español' },
+            { id: 'en', label: 'English' },
+          ].map(l => (
             <button 
-              key={t.id}
-              onClick={() => setAppTheme(t.id)}
+              key={l.id}
+              onClick={() => {
+                setAppLanguage(l.id);
+                if (state.settings.sounds) playSound(600, 'sine', 0.1);
+              }}
               className={cn(
-                "p-3 rounded-xl border flex items-center gap-3 transition-all",
-                state.settings.theme === t.id ? "border-primary bg-primary-light" : "border-[#e8e0f0] bg-white"
+                "p-3 rounded-xl border flex items-center justify-center gap-3 transition-all cursor-pointer",
+                state.settings.language === l.id ? "border-primary bg-primary-light/30 ring-2 ring-primary-light" : "border-border-main bg-card hover:border-primary-light"
               )}
             >
-              <div className={cn("w-4 h-4 rounded-full", t.colors)} />
-              <span className="text-xs font-bold">{t.label}</span>
+              <span className="text-xs font-bold text-text-main">{l.label}</span>
             </button>
           ))}
         </div>
       </div>
 
       <div className="card">
-        <h3 className="font-display font-bold mb-6">Preferencias de la Interfaz</h3>
+        <h3 className="font-display font-bold mb-6 flex items-center gap-2">
+          <Palette className="w-5 h-5 text-primary" /> {t('theme')}
+        </h3>
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { id: 'default', label: t('theme_default') || 'Estándar', colors: 'bg-primary' },
+            { id: 'dark', label: t('theme_dark') || 'Oscuro', colors: 'bg-slate-900 border border-white/20' },
+            { id: 'boho', label: t('theme_boho') || 'Boho', colors: 'bg-[#c4956a]' },
+            { id: 'minimal', label: t('theme_minimal') || 'Minimal', colors: 'bg-[#666]' },
+          ].map(th => (
+            <button 
+              key={th.id}
+              onClick={() => {
+                setAppTheme(th.id);
+                if (state.settings.sounds) playSound(600, 'sine', 0.1);
+              }}
+              className={cn(
+                "p-3 rounded-xl border flex items-center gap-3 transition-all cursor-pointer",
+                state.settings.theme === th.id ? "border-primary bg-primary-light/30 ring-2 ring-primary-light" : "border-border-main bg-card hover:border-primary-light"
+              )}
+            >
+              <div className={cn("w-4 h-4 rounded-full", th.colors)} />
+              <span className="text-xs font-bold text-text-main">{th.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="font-display font-bold flex items-center gap-2">
+            <Layout className="w-5 h-5 text-primary" /> {t('interfacePrefs')}
+          </h3>
+          {state.settings.sounds && (
+            <button 
+              onClick={() => playSound(440, 'sine', 0.2)}
+              className="text-[10px] font-bold text-primary flex items-center gap-1 hover:underline"
+            >
+              <Volume2 className="w-3 h-3" /> {t('testSound')}
+            </button>
+          )}
+        </div>
         
         <div className="space-y-4">
           {[
-            { id: 'hyperfocusGuard', label: 'Guardián de Enfoque', desc: 'Recordatorio cada 90min para tomar un descanso' },
-            { id: 'sounds', label: 'Efectos de Sonido', desc: 'Auditivos al completar tareas y metas' },
-            { id: 'confetti', label: 'Celebración de Confeti', desc: 'Efectos visuales festivos en tus victorias' }
+            { id: 'hyperfocusGuard', label: 'Hyperfocus Guard', desc: t('hyperfocusGuardDesc') },
+            { id: 'sounds', label: t('sounds'), desc: t('soundsDesc') },
+            { id: 'confetti', label: 'Confetti', desc: t('confettiDesc') }
           ].map((s) => (
-            <div key={s.id} className="flex items-center justify-between p-4 border border-[#e8e0f0] rounded-2xl">
+            <div key={s.id} className="flex items-center justify-between p-4 border border-border-main rounded-2xl bg-hover/30">
               <div>
-                <div className="text-sm font-bold">{s.label}</div>
-                <div className="text-[10px] text-[#a9a0b5]">{s.desc}</div>
+                <div className="text-sm font-bold text-text-main">{s.label}</div>
+                <div className="text-[10px] text-text-muted">{s.desc}</div>
               </div>
               <button 
-                onClick={() => toggle(s.id)}
+                onClick={() => {
+                  toggle(s.id);
+                  if (s.id === 'sounds' && !state.settings.sounds) {
+                    // Just about to turn on sounds, play a test sound
+                    setTimeout(() => playSound(660, 'sine', 0.1), 100);
+                  }
+                }}
                 className={cn(
-                  "w-12 h-6 rounded-full transition-all relative",
-                  state.settings[s.id] ? "bg-primary" : "bg-[#e8e0f0]"
+                  "w-12 h-6 rounded-full transition-all relative cursor-pointer",
+                  state.settings[s.id] ? "bg-primary shadow-[0_0_10px_rgba(155,142,196,0.5)]" : "bg-border-main"
                 )}
               >
                 <div className={cn(
-                  "absolute top-1 w-4 h-4 rounded-full bg-white transition-all",
+                  "absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all",
                   state.settings[s.id] ? "left-7" : "left-1"
                 )} />
               </button>
@@ -986,7 +1212,7 @@ const SettingsView = ({ state, setState }: any) => {
       <div className="card">
         <div className="flex items-center gap-2 mb-6">
           <Database className="w-5 h-5 text-primary" />
-          <h3 className="font-display font-bold">Respaldo y Seguridad</h3>
+          <h3 className="font-display font-bold">{t('dataManagement') || 'Respaldo y Seguridad'}</h3>
         </div>
         
         <div className="grid sm:grid-cols-2 gap-4">
@@ -998,8 +1224,8 @@ const SettingsView = ({ state, setState }: any) => {
               <Download className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-sm font-bold text-[#3d3450]">Exportar Datos</div>
-              <p className="text-[10px] text-[#a9a0b5] leading-relaxed">Descarga localmente un archivo .json con toda tu configuración y registros.</p>
+              <div className="text-sm font-bold text-text-main">{t('export')}</div>
+              <p className="text-[10px] text-text-muted leading-relaxed">{t('exportDesc') || 'Descarga localmente un archivo .json con toda tu configuración y registros.'}</p>
             </div>
           </button>
 
@@ -1008,42 +1234,114 @@ const SettingsView = ({ state, setState }: any) => {
               <Upload className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-sm font-bold text-[#3d3450]">Restaurar Backup</div>
-              <p className="text-[10px] text-[#a9a0b5] leading-relaxed">Sube un archivo .json previamente exportado para recuperar tu información.</p>
+              <div className="text-sm font-bold text-text-main">{t('import')}</div>
+              <p className="text-[10px] text-text-muted leading-relaxed">{t('importDesc') || 'Sube un archivo .json previamente exportado para recuperar tu información.'}</p>
             </div>
             <input type="file" className="hidden" accept=".json" onChange={importData} />
           </label>
         </div>
       </div>
 
-      <div className="card border-danger-light bg-danger-light/10">
+      <div className="card border-danger-light bg-danger-light/5">
         <div className="flex items-center gap-2 mb-4">
           <AlertTriangle className="w-5 h-5 text-danger" />
-          <h3 className="font-display font-bold text-danger">Zona de Peligro</h3>
+          <h3 className="font-display font-bold text-danger">{t('dangerZone') || 'Zona de Peligro'}</h3>
         </div>
         
-        <p className="text-xs text-[#7a7089] mb-6 leading-relaxed">
-          Las siguientes acciones son **irreversibles**. Una vez eliminados, no se podrán recuperar tus tareas, hábitos ni historial de energía sin un backup previo.
+        <p className="text-xs text-text-secondary mb-6 leading-relaxed">
+          {t('dangerZoneDesc') || 'Las siguientes acciones son **irreversibles**. Una vez eliminados, no se podrán recuperar tus tareas, hábitos ni historial de energía sin un backup previo.'}
         </p>
 
         <button 
-          onClick={() => {
-            if(confirm('¿Seguro que quieres borrar todos los datos? Esta acción no se puede deshacer.')) {
-              localStorage.clear();
-              window.location.reload();
-            }
-          }}
-          className="w-full btn btn-secondary text-danger border-danger-light hover:bg-danger hover:text-white font-bold text-xs py-4"
+          disabled={isResetting}
+          onClick={() => setShowConfirmModal(true)}
+          className={cn(
+            "w-full btn border-2 font-bold text-xs py-4 transition-all active:scale-95 flex items-center justify-center gap-2",
+            isResetting 
+              ? "bg-danger text-white border-danger animate-pulse border-none" 
+              : "border-danger/40 text-danger hover:bg-danger hover:text-white"
+          )}
         >
-          <Trash2 className="w-4 h-4" />
-          Borrar Base de Datos Local
+          {isResetting ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              {t('deletingDb') || 'Borrando Base de Datos...'}
+            </>
+          ) : (
+            <>
+              <Trash2 className="w-4 h-4" />
+              {t('deleteAll') || 'Borrar Base de Datos Local'}
+            </>
+          )}
         </button>
       </div>
+
+      {/* Custom Confirmation Modal */}
+      <AnimatePresence>
+        {showConfirmModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !isResetting && setShowConfirmModal(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-sm bg-card border border-border-main rounded-3xl p-6 shadow-2xl overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-1 bg-danger" />
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 bg-danger/10 rounded-full flex items-center justify-center mb-4 text-danger">
+                  <AlertTriangle className="w-8 h-8" />
+                </div>
+                <h3 className="text-lg font-bold text-text-main mb-2">{t('confirmDeleteTitle') || '¿Estás absolutamente seguro?'}</h3>
+                <p className="text-sm text-text-muted leading-relaxed mb-8">
+                  {t('confirmDeleteDesc') || 'Esta acción borrará permanentemente TODOS los datos locales de NeuroFlow OS. No hay forma de recuperar esta información después de pulsar confirmar.'}
+                </p>
+                <div className="flex gap-3 w-full">
+                  <button 
+                    disabled={isResetting}
+                    onClick={() => setShowConfirmModal(false)}
+                    className="flex-1 py-3 bg-hover/50 hover:bg-hover text-text-main font-bold text-xs rounded-xl transition-all"
+                  >
+                    {t('cancel')}
+                  </button>
+                  <button 
+                    disabled={isResetting}
+                    onClick={() => {
+                      setIsResetting(true);
+                      if (state.settings.sounds) playSound(150, 'square', 0.3);
+                      
+                      if (resetStorage) {
+                        setTimeout(() => {
+                          resetStorage();
+                        }, 1800);
+                      }
+                    }}
+                    className={cn(
+                      "flex-[1.5] py-3 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2",
+                      isResetting 
+                        ? "bg-danger text-white animate-pulse" 
+                        : "bg-danger text-white hover:bg-danger-dark shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+                    )}
+                  >
+                    {isResetting ? (t('deleting') || 'Borrando...') : (t('confirmDelete') || 'Confirmar Borrado')}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
-const CycleSyncView = ({ state, setState }: any) => {
+const CycleSyncView = ({ state, setState, t }: any) => {
   const updateCycle = (date: string) => {
     setState((prev: any) => ({ ...prev, cycleStartDate: date }));
   };
@@ -1054,10 +1352,10 @@ const CycleSyncView = ({ state, setState }: any) => {
     const today = new Date();
     const diff = Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) % 28;
     
-    if (diff <= 5) return { name: 'Menstrual', emoji: '🩸', color: 'text-danger' };
-    if (diff <= 14) return { name: 'Folicular', emoji: '🌱', color: 'text-accent' };
-    if (diff <= 17) return { name: 'Ovulación', emoji: '✨', color: 'text-warning' };
-    return { name: 'Lútea', emoji: '🔮', color: 'text-primary' };
+    if (diff <= 5) return { name: t('menstrualPhase'), emoji: '🩸', color: 'text-danger', desc: t('menstrualDesc') };
+    if (diff <= 14) return { name: t('follicularPhase'), emoji: '🌱', color: 'text-accent', desc: t('follicularDesc') };
+    if (diff <= 17) return { name: t('ovulationPhase'), emoji: '✨', color: 'text-warning', desc: t('ovulationDesc') };
+    return { name: t('lutealPhase'), emoji: '🔮', color: 'text-primary', desc: t('lutealDesc') };
   };
 
   const phase = getPhase();
@@ -1065,23 +1363,20 @@ const CycleSyncView = ({ state, setState }: any) => {
   return (
     <div className="space-y-6">
       <div className="card">
-        <label className="text-xs font-bold text-[#a9a0b5] uppercase block mb-2">Inicio del último ciclo</label>
+        <label className="text-xs font-bold text-text-muted uppercase block mb-2">{t('lastCycleDate')}</label>
         <input 
           type="date" 
           value={state.cycleStartDate}
           onChange={e => updateCycle(e.target.value)}
-          className="w-full bg-[#f5f0eb] border-none rounded-xl px-4 py-2 text-sm font-medium outline-none mb-6"
+          className="w-full bg-hover border-none rounded-xl px-4 py-2 text-sm font-medium outline-none mb-6 text-text-main"
         />
 
         {phase && (
-          <div className="text-center p-6 bg-[#fcfaff] rounded-2xl border border-primary-light">
+          <div className="text-center p-6 bg-primary/5 rounded-2xl border border-primary-light/30">
             <div className="text-5xl mb-4">{phase.emoji}</div>
-            <h3 className={cn("font-display font-bold text-xl mb-2", phase.color)}>Fase {phase.name}</h3>
-            <p className="text-xs text-[#7a7089] leading-relaxed">
-              {phase.name === 'Menstrual' && 'Descanso, tareas ligeras, autocuidado.'}
-              {phase.name === 'Folicular' && 'Energía subiendo. Proyectos creativos, brainstorming.'}
-              {phase.name === 'Ovulación' && 'Máxima energía social. Reuniones importantes.'}
-              {phase.name === 'Lútea' && 'Organización, cierre de proyectos, administración.'}
+            <h3 className={cn("font-display font-bold text-xl mb-2", phase.color)}>{t('phase') || 'Fase'} {phase.name}</h3>
+            <p className="text-xs text-text-secondary leading-relaxed">
+              {phase.desc}
             </p>
           </div>
         )}
@@ -1090,7 +1385,7 @@ const CycleSyncView = ({ state, setState }: any) => {
   );
 };
 
-const SleepView = ({ state, setState }: any) => {
+const SleepView = ({ state, setState, t }: any) => {
   const [ritualState, setRitualState] = useState(new Array(4).fill(false));
 
   const toggleRitual = (idx: number) => {
@@ -1103,40 +1398,52 @@ const SleepView = ({ state, setState }: any) => {
   return (
     <div className="space-y-6">
       <div className="card">
-        <h3 className="font-display font-bold mb-6 flex items-center gap-2"><Moon className="w-5 h-5" /> Rastreador de Sueño</h3>
+        <h3 className="font-display font-bold mb-6 flex items-center gap-2">
+            <Moon className="w-5 h-5 text-primary" /> {t('sleepTrackerTitle')}
+        </h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-[10px] font-bold text-[#a9a0b5] uppercase">Hora Dormir</label>
-            <input type="time" className="w-full bg-[#f5f0eb] border-none rounded-xl px-3 py-2 text-sm mt-1 outline-none" />
+            <label className="text-[10px] font-bold text-text-muted uppercase">{t('bedtimeLabel')}</label>
+            <input 
+              type="time" 
+              value={state.sleepBedtime}
+              onChange={e => setState((p: any) => ({ ...p, sleepBedtime: e.target.value }))}
+              className="w-full bg-hover border-none rounded-xl px-3 py-2 text-sm mt-1 outline-none text-text-main" 
+            />
           </div>
           <div>
-            <label className="text-[10px] font-bold text-[#a9a0b5] uppercase">Hora Despertar</label>
-            <input type="time" className="w-full bg-[#f5f0eb] border-none rounded-xl px-3 py-2 text-sm mt-1 outline-none" />
+            <label className="text-[10px] font-bold text-text-muted uppercase">{t('waketimeLabel')}</label>
+            <input 
+              type="time" 
+              value={state.sleepWaketime}
+              onChange={e => setState((p: any) => ({ ...p, sleepWaketime: e.target.value }))}
+              className="w-full bg-hover border-none rounded-xl px-3 py-2 text-sm mt-1 outline-none text-text-main" 
+            />
           </div>
         </div>
       </div>
 
       <div className="card">
-        <h3 className="font-display font-bold mb-4">Ritual de Desconexión</h3>
+        <h3 className="font-display font-bold mb-4">{t('sleepRitualTitle')}</h3>
         <div className="space-y-2">
           {[
-            { icon: '📱', text: 'Pantallas fuera (30 min antes)' },
-            { icon: '👗', text: 'Preparar ropa de mañana' },
-            { icon: '🧠', text: 'Vaciado mental rápido' },
-            { icon: '📖', text: 'Leer 10 min (libro físico)' }
+            { icon: '📱', text: t('sleepStep1') },
+            { icon: '👗', text: t('sleepStep2') },
+            { icon: '🧠', text: t('sleepStep3') },
+            { icon: '📖', text: t('sleepStep4') }
           ].map((step, i) => (
             <div 
               key={i} 
               onClick={() => toggleRitual(i)}
               className={cn(
-                "flex items-center gap-3 p-3 bg-[#fcfaff] rounded-xl border border-[#e8e0f0] cursor-pointer transition-all",
-                ritualState[i] && "bg-accent-light border-accent opacity-80"
+                "flex items-center gap-3 p-3 bg-hover/50 rounded-xl border border-border-main cursor-pointer transition-all",
+                ritualState[i] && "bg-accent-light/20 border-accent/40 opacity-80"
               )}
             >
               <span className="text-xl">{step.icon}</span>
-              <span className={cn("text-xs font-medium", ritualState[i] && "line-through")}>{step.text}</span>
+              <span className={cn("text-xs font-medium text-text-main", ritualState[i] && "line-through text-text-muted")}>{step.text}</span>
               <div className={cn(
-                "ml-auto w-5 h-5 border-2 border-[#e8e0f0] rounded-lg flex items-center justify-center",
+                "ml-auto w-5 h-5 border-2 border-border-main rounded-lg flex items-center justify-center",
                 ritualState[i] && "bg-accent border-accent text-white"
               )}>
                 {ritualState[i] && <CheckCircle2 className="w-3 h-3" />}
@@ -1149,17 +1456,27 @@ const SleepView = ({ state, setState }: any) => {
   );
 };
 
-const BodyDoubleView = () => {
+const BodyDoubleView = ({ state, setState, t }: any) => {
   const [isActive, setIsActive] = useState(false);
   const [seconds, setSeconds] = useState(0);
+  const [showOverwhelm, setShowOverwhelm] = useState(false);
+  const [currentMessageIdx, setCurrentMessageIdx] = useState(0);
+  const [isStarted, setIsStarted] = useState(false);
+
+  const messages = t('bodyDoubleMessages') as unknown as string[];
 
   useEffect(() => {
     let interval: any;
-    if (isActive) {
-      interval = setInterval(() => setSeconds(s => s + 1), 1000);
+    if (isActive && !showOverwhelm && isStarted) {
+      interval = setInterval(() => {
+        setSeconds(s => s + 1);
+        if (seconds > 0 && seconds % 45 === 0) {
+          setCurrentMessageIdx(prev => (prev + 1) % messages.length);
+        }
+      }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isActive]);
+  }, [isActive, showOverwhelm, seconds, isStarted]);
 
   const formatTime = (s: number) => {
     const mins = Math.floor(s / 60);
@@ -1167,43 +1484,215 @@ const BodyDoubleView = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  return (
-    <div className="card text-center p-12">
-      <motion.div 
-        animate={{ scale: isActive ? [1, 1.05, 1] : 1 }} 
-        transition={{ repeat: Infinity, duration: 4 }}
-        className="text-6xl mb-6"
-      >
-        👩‍💻
-      </motion.div>
-      <h2 className="text-xl font-display font-bold mb-2">Compañera de Enfoque</h2>
-      <p className="text-sm text-[#7a7089] mb-4">"Estoy aquí contigo. Juntas podemos con esto."</p>
-      
-      {isActive && (
-        <div className="text-2xl font-display font-bold text-primary mb-8 animate-pulse">
-          {formatTime(seconds)}
-        </div>
-      )}
+  const resetSession = () => {
+    setIsActive(false);
+    setIsStarted(false);
+    setSeconds(0);
+    setShowOverwhelm(false);
+    setState((prev: any) => ({ ...prev, bodyDoubleIntention: '' }));
+  };
 
-      <div className="flex justify-center gap-3">
-        <button 
-          onClick={() => setIsActive(!isActive)}
-          className={cn("btn", isActive ? "btn-secondary" : "btn-primary")}
-        >
-          {isActive ? 'Pausar Sesión' : 'Iniciar Sesión'}
-        </button>
-        <button 
-          onClick={() => { setIsActive(false); setSeconds(0); }}
-          className="btn btn-secondary"
-        >
-          Reiniciar
-        </button>
+  if (!isStarted) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="card max-w-xl mx-auto p-12 text-center"
+      >
+        <div className="w-20 h-20 bg-linear-to-br from-primary-light to-secondary-light rounded-full flex items-center justify-center text-4xl mx-auto mb-8 shadow-[0_10px_25px_-5px_rgba(118,74,188,0.3)]">
+          👩‍💻
+        </div>
+        <h2 className="text-2xl font-display font-bold mb-4 text-text-main">{t('bodyDoubleTitle')}</h2>
+        <p className="text-text-muted text-sm mb-8 leading-relaxed">
+          {t('bodyDoubleDesc')}
+        </p>
+        
+        <div className="relative mb-8 group">
+          <input 
+            autoFocus
+            type="text"
+            placeholder={t('bodyDoublePlaceholder')}
+            value={state.bodyDoubleIntention || ''}
+            onChange={(e) => setState((prev: any) => ({ ...prev, bodyDoubleIntention: e.target.value }))}
+            onKeyDown={(e) => e.key === 'Enter' && state.bodyDoubleIntention && (setIsStarted(true), setIsActive(true))}
+            className="w-full bg-hover border-b-2 border-primary-light/50 px-4 py-5 text-center text-xl font-medium outline-none focus:border-primary transition-all rounded-t-xl placeholder:text-text-muted/30 text-text-main"
+          />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-primary group-focus-within:w-full transition-all duration-500" />
+        </div>
+
+        <div className="space-y-4">
+          <button 
+            disabled={!state.bodyDoubleIntention}
+            onClick={() => { setIsStarted(true); setIsActive(true); }}
+            className="btn btn-primary btn-lg w-full disabled:opacity-30 disabled:grayscale transition-all shadow-xl hover:shadow-primary/20 flex items-center justify-center gap-3 py-4"
+          >
+            <Play className="w-5 h-5 fill-current" />
+            {t('bodyDoubleStart')}
+          </button>
+          <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest">{t('bodyDoubleEnterToStart')}</p>
+        </div>
+      </motion.div>
+    );
+  }
+
+  if (showOverwhelm) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="card max-w-md mx-auto p-10 text-center"
+      >
+        <div className="text-5xl mb-6">🍃</div>
+        <h3 className="text-xl font-display font-bold mb-4">{t('bodyDoublePauseTitle')}</h3>
+        <p className="text-sm text-text-secondary mb-8 leading-relaxed">
+          {t('bodyDoublePauseDesc')}
+        </p>
+        <div className="space-y-4">
+          <button 
+            onClick={() => setShowOverwhelm(false)}
+            className="btn btn-primary w-full"
+          >
+            {t('bodyDoublePauseBack')}
+          </button>
+          <button 
+            onClick={resetSession}
+            className="btn btn-secondary w-full"
+          >
+            {t('bodyDoublePauseEnd')}
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto space-y-6">
+      <div className="card text-center p-12 relative overflow-hidden">
+        {/* Focus Aura Background */}
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.2, 1],
+            opacity: [0.1, 0.2, 0.1]
+          }}
+          transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+          className="absolute inset-0 bg-primary/10 rounded-full blur-[100px] pointer-events-none"
+        />
+
+        <div className="relative z-10">
+          <div className="flex flex-col items-center">
+            <div className="relative mb-6">
+              <motion.div 
+                animate={{ 
+                  scale: [1, 1.05, 1],
+                }}
+                transition={{ 
+                  repeat: Infinity, 
+                  duration: 4, 
+                  ease: "easeInOut" 
+                }}
+                className="w-24 h-24 bg-card border-2 border-primary-light rounded-full flex items-center justify-center text-5xl shadow-xl z-20 relative"
+              >
+                👩‍💻
+              </motion.div>
+              {/* Breathing Circle */}
+              <motion.div 
+                animate={{ scale: [1, 1.8, 1], opacity: [0.3, 0, 0.3] }}
+                transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
+                className="absolute inset-0 bg-primary-light rounded-full -z-10"
+              />
+            </div>
+
+            <div className="mb-8">
+              <h2 className="text-xl font-display font-bold text-text-main mb-2">{t('bodyDoublePresenceTitle')}</h2>
+              <p className="text-accent font-bold text-sm bg-accent-light/20 px-4 py-1 rounded-full border border-accent/20 inline-block mb-4">
+                {t('bodyDoubleFocus').replace('{t}', state.bodyDoubleIntention)}
+              </p>
+              
+              <AnimatePresence mode="wait">
+                <motion.p 
+                  key={currentMessageIdx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="text-text-secondary text-base italic"
+                >
+                  "{messages[currentMessageIdx]}"
+                </motion.p>
+              </AnimatePresence>
+            </div>
+
+            <div className="flex flex-col items-center gap-6 w-full max-w-sm mx-auto">
+              <div className="flex flex-col items-center w-full">
+                <div className="text-3xl font-display font-bold text-primary mb-2 tabular-nums">
+                  {formatTime(seconds)}
+                </div>
+                <div className="w-full h-2 bg-hover rounded-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-linear-to-r from-primary to-accent"
+                    animate={{ width: `${Math.min((seconds / 300) * 100, 100)}%` }} // 5 min milestones
+                  />
+                </div>
+                <div className="flex justify-between w-full mt-2 text-[10px] text-text-muted font-bold uppercase tracking-widest">
+                  <span>{t('start') || 'Inicio'}</span>
+                  <span>{t('milestone') || 'Hito'}: 5 min</span>
+                </div>
+              </div>
+
+              <div className="flex gap-4 w-full">
+                <button 
+                  onClick={() => setIsActive(!isActive)}
+                  className={cn(
+                    "flex-1 btn btn-lg transition-all flex items-center justify-center gap-2",
+                    isActive ? "btn-secondary" : "btn-primary"
+                  )}
+                >
+                  {isActive ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-1" />}
+                  {isActive ? t('pause') || 'Pausa' : t('continue') || 'Continuar'}
+                </button>
+                <button 
+                  onClick={() => setShowOverwhelm(true)}
+                  className="btn btn-secondary border-danger-light text-danger hover:bg-danger hover:text-white"
+                >
+                   {t('bodyDoubleBlockage')}
+                </button>
+              </div>
+
+              <button 
+                onClick={resetSession}
+                className="text-xs font-bold text-text-muted hover:text-text-main transition-colors"
+              >
+                {t('bodyDoubleEndSession')}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div className="card p-6 bg-card/50 border-primary-light flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-primary-light flex items-center justify-center text-2xl">
+            🛡️
+          </div>
+          <div>
+            <div className="text-sm font-bold text-text-main">{t('bodyDoubleMirrorMode')}</div>
+            <p className="text-[10px] text-text-secondary">{t('bodyDoubleMirrorModeDesc')}</p>
+          </div>
+        </div>
+        <div className="card p-6 bg-card/50 border-accent-light flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-accent-light flex items-center justify-center text-2xl">
+            👂
+          </div>
+          <div>
+            <div className="text-sm font-bold text-text-main">{t('bodyDoubleNoJudgment')}</div>
+            <p className="text-[10px] text-text-secondary">{t('bodyDoubleNoJudgmentDesc')}</p>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-const ImpulseCheckerView = () => {
+const ImpulseCheckerView = ({ t }: { t: (key: string) => string }) => {
   const [checks, setChecks] = useState(new Array(4).fill(false));
   const [evaluated, setEvaluated] = useState(false);
 
@@ -1215,21 +1704,21 @@ const ImpulseCheckerView = () => {
 
   const getResult = () => {
     const score = checks.filter(c => c).length;
-    if (score >= 3) return { text: "Parece una decisión razonable. Adelante con precaución.", color: "text-accent" };
-    if (score >= 2) return { text: "Espera 24 horas antes de decidir. La dopamina bajará.", color: "text-warning" };
-    return { text: "Impulso detectado. Detente y vuelve mañana.", color: "text-danger" };
+    if (score >= 3) return { text: t('impulseResultReasonable'), color: "text-accent" };
+    if (score >= 2) return { text: t('impulseResultWait'), color: "text-warning" };
+    return { text: t('impulseResultStop'), color: "text-danger" };
   };
 
   return (
     <div className="card bg-warning-light border-warning p-8 text-center">
       <div className="text-5xl mb-4">🤔</div>
-      <h3 className="font-display font-bold text-xl mb-6">¿Realmente lo necesitas?</h3>
+      <h3 className="font-display font-bold text-xl mb-6">{t('impulseQuestionTitle')}</h3>
       <div className="space-y-4 text-left max-w-xs mx-auto mb-8">
         {[
-          '¿Lo he pensado por más de 24 horas?',
-          '¿Encaja en mi presupuesto real?',
-          '¿Es una necesidad o un deseo impulsivo?',
-          '¿Me sentiré bien mañana sobre esto?'
+          t('impulseQ1'),
+          t('impulseQ2'),
+          t('impulseQ3'),
+          t('impulseQ4')
         ].map((q, i) => (
           <label key={i} className="flex items-center gap-3 cursor-pointer group">
             <input 
@@ -1257,13 +1746,13 @@ const ImpulseCheckerView = () => {
         onClick={() => setEvaluated(true)}
         className="btn btn-primary w-full max-w-xs"
       >
-        {evaluated ? 'Re-evaluar' : 'Evaluar Impulso'}
+        {evaluated ? t('impulseReevaluate') : t('impulseEvaluate')}
       </button>
     </div>
   );
 };
 
-const TravelKitView = ({ state, setState }: any) => {
+const TravelKitView = ({ state, setState, t }: any) => {
   const [text, setText] = useState('');
 
   const addItem = () => {
@@ -1282,15 +1771,15 @@ const TravelKitView = ({ state, setState }: any) => {
           <input 
             value={text}
             onChange={e => setText(e.target.value)}
-            placeholder="Item para el viaje..."
-            className="flex-1 bg-[#f5f0eb] border-none rounded-xl px-4 py-2 text-sm font-medium outline-none"
+            placeholder={t('travelPlaceholder') || 'Item para el viaje...'}
+            className="flex-1 bg-hover border border-border-main rounded-xl px-4 py-2 text-sm font-medium outline-none text-text-main focus:border-primary-light transition-all"
           />
-          <button onClick={addItem} className="btn btn-primary btn-sm">Añadir</button>
+          <button onClick={addItem} className="btn btn-primary btn-sm">{t('add') || 'Añadir'}</button>
         </div>
 
         <div className="space-y-2">
           {state.travelItems.map((item: any) => (
-            <div key={item.id} className="flex items-center gap-3 p-3 border border-[#e8e0f0] rounded-xl">
+            <div key={item.id} className="flex items-center gap-3 p-3 border border-border-main rounded-xl bg-card/30">
               <button 
                 onClick={() => {
                   const newItems = state.travelItems.map((i: any) => i.id === item.id ? { ...i, checked: !i.checked } : i);
@@ -1298,13 +1787,13 @@ const TravelKitView = ({ state, setState }: any) => {
                 }}
                 className={cn(
                   "w-5 h-5 border-2 rounded transition-all",
-                  item.checked ? "bg-accent border-accent" : "border-[#e8e0f0]"
+                  item.checked ? "bg-accent border-accent" : "border-border-main bg-card"
                 )}
               />
-              <span className={cn("text-xs font-medium", item.checked && "line-through opacity-50")}>{item.text}</span>
+              <span className={cn("text-xs font-medium text-text-main", item.checked && "line-through opacity-50")}>{item.text}</span>
               <button 
                 onClick={() => setState((prev: any) => ({ ...prev, travelItems: prev.travelItems.filter((i: any) => i.id !== item.id) }))}
-                className="ml-auto p-1 text-[#a9a0b5] hover:text-danger"
+                className="ml-auto p-1 text-text-muted hover:text-danger"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -1316,36 +1805,36 @@ const TravelKitView = ({ state, setState }: any) => {
   );
 };
 
-function renderView(state: any, setState: any, navigateTo: any) {
+function renderView(state: any, setState: any, navigateTo: any, resetStorage: any, t: (key: string) => string) {
   switch (state.currentView) {
-    case 'dashboard': return <DashboardView state={state} setState={setState} navigateTo={navigateTo} />;
-    case 'morning': return <MorningLaunchView state={state} setState={setState} navigateTo={navigateTo} />;
-    case 'tasks': return <TasksView state={state} setState={setState} />;
-    case 'timer': return <TimerView state={state} setState={setState} />;
-    case 'braindump': return <BrainDumpView state={state} setState={setState} navigateTo={navigateTo} />;
-    case 'energy': return <EnergyTrackerView state={state} setState={setState} />;
-    case 'dopamine': return <DopamineMenuView state={state} setState={setState} />;
-    case 'habits': return <HabitTrackerView state={state} setState={setState} />;
-    case 'meds': return <MedsView state={state} setState={setState} />;
-    case 'wins': return <WinsJournalView state={state} setState={setState} />;
-    case 'rsd': return <RsdShieldView state={state} />;
-    case 'settings': return <SettingsView state={state} setState={setState} />;
-    case 'cycle': return <CycleSyncView state={state} setState={setState} />;
-    case 'sleep': return <SleepView state={state} setState={setState} />;
-    case 'bodydouble': return <BodyDoubleView />;
-    case 'impulse': return <ImpulseCheckerView />;
-    case 'travel': return <TravelKitView state={state} setState={setState} />;
-    case 'rescue': return <OverwhelmRescueView state={state} />;
+    case 'dashboard': return <DashboardView state={state} setState={setState} navigateTo={navigateTo} t={t} />;
+    case 'morning': return <MorningLaunchView state={state} setState={setState} navigateTo={navigateTo} t={t} />;
+    case 'tasks': return <TasksView state={state} setState={setState} t={t} />;
+    case 'timer': return <TimerView state={state} setState={setState} t={t} />;
+    case 'braindump': return <BrainDumpView state={state} setState={setState} navigateTo={navigateTo} t={t} />;
+    case 'energy': return <EnergyTrackerView state={state} setState={setState} t={t} />;
+    case 'dopamine': return <DopamineMenuView state={state} setState={setState} t={t} />;
+    case 'habits': return <HabitTrackerView state={state} setState={setState} t={t} />;
+    case 'meds': return <MedsView state={state} setState={setState} t={t} />;
+    case 'wins': return <WinsJournalView state={state} setState={setState} t={t} />;
+    case 'rsd': return <RsdShieldView state={state} setState={setState} t={t} />;
+    case 'settings': return <SettingsView state={state} setState={setState} resetStorage={resetStorage} t={t} />;
+    case 'cycle': return <CycleSyncView state={state} setState={setState} t={t} />;
+    case 'sleep': return <SleepView state={state} setState={setState} t={t} />;
+    case 'bodydouble': return <BodyDoubleView state={state} setState={setState} t={t} />;
+    case 'impulse': return <ImpulseCheckerView t={t} />;
+    case 'travel': return <TravelKitView state={state} setState={setState} t={t} />;
+    case 'rescue': return <OverwhelmRescueView state={state} t={t} />;
     default: return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
-        <AlertCircle className="w-16 h-16 text-[#a9a0b5] mb-4" />
-        <h2 className="text-xl font-display font-bold">Funcionalidad no disponible</h2>
-        <p className="text-[#7a7089]">Esta vista está en desarrollo para el Centro de Control.</p>
+      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-6">
+        <AlertCircle className="w-16 h-16 text-text-muted mb-4 opacity-50" />
+        <h2 className="text-xl font-display font-bold text-text-main">{t('featureUnavailable') || 'Funcionalidad no disponible'}</h2>
+        <p className="text-text-secondary">{t('inDevelopment') || 'Esta vista está en desarrollo para el Centro de Control.'}</p>
         <button 
           onClick={() => navigateTo('dashboard')}
           className="mt-6 btn btn-primary"
         >
-          Volver al Panel General
+          {t('backToDashboard') || 'Volver al Panel General'}
         </button>
       </div>
     );
@@ -1354,7 +1843,7 @@ function renderView(state: any, setState: any, navigateTo: any) {
 
 // --- View Components ---
 
-const DashboardView = ({ state, setState, navigateTo }: any) => {
+const DashboardView = ({ state, setState, navigateTo, t }: any) => {
   const today = new Date().toDateString();
   const todayTasks = state.tasks.filter((t: any) => new Date(t.created).toDateString() === today);
   const completedToday = todayTasks.filter((t: any) => t.completed).length;
@@ -1363,23 +1852,23 @@ const DashboardView = ({ state, setState, navigateTo }: any) => {
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Tareas Hoy', value: todayTasks.length, icon: Target },
-          { label: 'Completadas', value: completedToday, icon: CheckCircle2 },
-          { label: 'Min Foco', value: state.timerState.totalFocusMinutes, icon: Timer },
-          { label: 'Wins Hoy', value: state.wins.filter((w: any) => new Date(w.date).toDateString() === today).length, icon: Trophy }
+          { label: t('statsTasksToday') || 'Tareas Hoy', value: todayTasks.length, icon: Target },
+          { label: t('statsCompleted') || 'Completadas', value: completedToday, icon: CheckCircle2 },
+          { label: t('statsFocusMinutes') || 'Min Foco', value: state.timerState.totalFocusMinutes, icon: Timer },
+          { label: t('statsWinsToday') || 'Wins Hoy', value: state.wins.filter((w: any) => new Date(w.date).toDateString() === today).length, icon: Trophy }
         ].map((stat, idx) => (
-          <div key={idx} className="bg-white border border-[#e8e0f0] p-4 rounded-xl text-center">
-            <stat.icon className="w-5 h-5 mx-auto mb-2 text-[#a9a0b5]" />
-            <div className="text-2xl font-display font-bold text-[#3d3450]">{stat.value}</div>
-            <div className="text-[10px] text-[#a9a0b5] uppercase tracking-wider">{stat.label}</div>
+          <div key={idx} className="bg-card border border-border-main p-4 rounded-xl text-center">
+            <stat.icon className="w-5 h-5 mx-auto mb-2 text-text-muted" />
+            <div className="text-2xl font-display font-bold text-text-main">{stat.value}</div>
+            <div className="text-[10px] text-text-muted uppercase tracking-wider">{stat.label}</div>
           </div>
         ))}
       </div>
 
       {state.dailyPriority && (
-        <div className="bg-linear-to-r from-primary-light to-secondary-light rounded-2xl p-6 text-center border border-white/50">
-          <div className="text-[10px] uppercase tracking-widest font-bold text-primary-dark mb-2">🎯 Prioridad de Hoy</div>
-          <div className="text-xl font-display font-bold text-[#3d3450]">{state.dailyPriority}</div>
+        <div className="bg-linear-to-r from-primary-light/30 to-secondary-light/30 rounded-2xl p-6 text-center border border-primary-light/20 shadow-sm">
+          <div className="text-[10px] uppercase tracking-widest font-bold text-primary mb-2">🎯 {t('dailyPriorityTitle') || 'Prioridad de Hoy'}</div>
+          <div className="text-xl font-display font-bold text-text-main">{state.dailyPriority}</div>
         </div>
       )}
 
@@ -1387,28 +1876,28 @@ const DashboardView = ({ state, setState, navigateTo }: any) => {
         <div className="card">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-display font-bold flex items-center gap-2">
-              <Target className="w-5 h-5 text-primary" /> Tareas Pendientes
+              <Target className="w-5 h-5 text-primary" /> {t('pendingTasksTitle') || 'Tareas Pendientes'}
             </h3>
-            <button onClick={() => navigateTo('tasks')} className="text-xs font-semibold text-primary">Ver todas</button>
+            <button onClick={() => navigateTo('tasks')} className="text-xs font-semibold text-primary">{t('viewAll') || 'Ver todas'}</button>
           </div>
           <div className="space-y-2">
             {state.tasks.filter((t: any) => !t.completed).slice(0, 5).map((task: any) => (
               <div 
                 key={task.id} 
-                className="flex items-center gap-3 p-3 border border-[#e8e0f0] rounded-xl hover:bg-[#f5f0eb] cursor-pointer transition-colors"
+                className="flex items-center gap-3 p-3 border border-border-main rounded-xl hover:bg-hover cursor-pointer transition-colors"
                 onClick={() => {
                   const newTasks = state.tasks.map((t: any) => t.id === task.id ? { ...t, completed: true } : t);
                   setState((prev: any) => ({ ...prev, tasks: newTasks }));
                 }}
               >
-                <div className="w-5 h-5 border-2 border-[#e8e0f0] rounded-full" />
+                <div className="w-5 h-5 border-2 border-border-main rounded-full" />
                 <span className="text-sm font-medium">{task.text}</span>
               </div>
             ))}
-            {state.tasks.filter((t: any) => !t.completed).length === 0 && (
-              <div className="text-center py-8 text-[#a9a0b5]">
-                <CheckCircle2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p className="text-xs">¡Todo despejado!</p>
+          {state.tasks.filter((t: any) => !t.completed).length === 0 && (
+              <div className="text-center py-8 text-text-muted">
+                <CheckCircle2 className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                <p className="text-xs uppercase font-bold tracking-widest">{t('allClear') || '¡Todo despejado!'}</p>
               </div>
             )}
           </div>
@@ -1417,24 +1906,24 @@ const DashboardView = ({ state, setState, navigateTo }: any) => {
         <div className="card">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-display font-bold flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-secondary" /> Wins Recientes
+              <Trophy className="w-5 h-5 text-secondary" /> {t('recentWinsTitle') || 'Wins Recientes'}
             </h3>
-            <button onClick={() => navigateTo('wins')} className="text-xs font-semibold text-primary">Journal</button>
+            <button onClick={() => navigateTo('wins')} className="text-xs font-semibold text-primary">{t('journal') || 'Journal'}</button>
           </div>
           <div className="space-y-2">
             {state.wins.slice(0, 3).map((win: any) => (
-              <div key={win.id} className="flex gap-3 p-3 bg-accent-light border-l-4 border-accent rounded-r-xl">
-                <span className="text-lg">✨</span>
+              <div key={win.id} className="flex gap-3 p-3 bg-card border border-border-main rounded-xl border-l-4 border-l-accent shadow-xs group cursor-pointer hover:bg-hover transition-colors" onClick={() => navigateTo('wins')}>
+                <span className="text-lg group-hover:scale-110 transition-transform">✨</span>
                 <div>
-                  <div className="text-xs font-semibold">{win.text}</div>
-                  <div className="text-[10px] text-[#a9a0b5]">{new Date(win.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                  <div className="text-xs font-semibold text-text-main">{win.text}</div>
+                  <div className="text-[10px] text-text-secondary font-medium">{new Date(win.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                 </div>
               </div>
             ))}
             {state.wins.length === 0 && (
-              <div className="text-center py-8 text-[#a9a0b5]">
-                <Trophy className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                <p className="text-xs">Registra tu primer éxito del día</p>
+              <div className="text-center py-8 text-text-muted">
+                <Trophy className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                <p className="text-xs uppercase font-bold tracking-widest">{t('emptyWins') || 'Tu diario está vacío'}</p>
               </div>
             )}
           </div>
@@ -1444,7 +1933,7 @@ const DashboardView = ({ state, setState, navigateTo }: any) => {
   );
 };
 
-const TasksView = ({ state, setState }: any) => {
+const TasksView = ({ state, setState, t }: any) => {
   const [filter, setFilter] = useState('all');
   const [isAdding, setIsAdding] = useState(false);
   const [newTaskText, setNewTaskText] = useState('');
@@ -1475,17 +1964,17 @@ const TasksView = ({ state, setState }: any) => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-4">
-        <div className="flex gap-2 bg-white p-1 rounded-xl border border-[#e8e0f0]">
+        <div className="flex gap-2 bg-card p-1 rounded-xl border border-border-main">
           {['all', 'pending', 'completed'].map(f => (
             <button 
               key={f}
               onClick={() => setFilter(f)}
               className={cn(
-                "px-4 py-1.5 rounded-lg text-xs font-semibold capitalize",
-                filter === f ? "bg-primary text-white" : "text-[#7a7089]"
+                "px-4 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all",
+                filter === f ? "bg-primary text-white shadow-sm" : "text-text-secondary hover:bg-hover"
               )}
             >
-              {f === 'all' ? 'Todas' : f === 'pending' ? 'Pendientes' : 'Hechas'}
+              {f === 'all' ? (t('filterAll') || 'Todas') : f === 'pending' ? (t('filterPending') || 'Pendientes') : (t('filterDone') || 'Hechas')}
             </button>
           ))}
         </div>
@@ -1493,7 +1982,7 @@ const TasksView = ({ state, setState }: any) => {
           onClick={() => setIsAdding(true)}
           className="btn btn-primary btn-sm flex gap-2"
         >
-          <Plus className="w-4 h-4" /> Nueva Tarea
+          <Plus className="w-4 h-4" /> {t('newTask') || 'Nueva Tarea'}
         </button>
       </div>
 
@@ -1505,12 +1994,12 @@ const TasksView = ({ state, setState }: any) => {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="card bg-[#fcfaff] border-primary-light">
+            <div className="card bg-card border-2 border-primary-light/50">
               <div className="space-y-4">
                 <input 
                   autoFocus
-                  placeholder="¿En qué quieres enfocarte?" 
-                  className="w-full bg-transparent border-none text-lg font-display font-medium outline-none placeholder:text-[#a9a0b5]"
+                  placeholder={t('newTaskPlaceholder') || '¿En qué quieres enfocarte?'} 
+                  className="w-full bg-transparent border-none text-lg font-display font-medium outline-none placeholder:text-text-muted text-text-main"
                   value={newTaskText}
                   onChange={e => setNewTaskText(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && addTask()}
@@ -1525,16 +2014,16 @@ const TasksView = ({ state, setState }: any) => {
                           "text-[10px] font-bold px-3 py-1 rounded-full border transition-all",
                           priority === p 
                             ? (p === 'p1' ? "bg-danger text-white border-danger" : p === 'p2' ? "bg-warning text-white border-warning" : "bg-accent text-white border-accent")
-                            : "border-[#e8e0f0] text-[#7a7089]"
+                            : "border-border-main text-text-secondary"
                         )}
                       >
-                        {p === 'p1' ? 'Crítica' : p === 'p2' ? 'Importante' : 'Normal'}
+                        {p === 'p1' ? (t('p1') || 'Crítica') : p === 'p2' ? (t('p2') || 'Importante') : (t('p3') || 'Normal')}
                       </button>
                     ))}
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => setIsAdding(false)} className="btn text-sm">Cancelar</button>
-                    <button onClick={addTask} className="btn btn-primary btn-sm">Añadir</button>
+                    <button onClick={() => setIsAdding(false)} className="btn text-sm">{t('cancel') || 'Cancelar'}</button>
+                    <button onClick={addTask} className="btn btn-primary btn-sm">{t('add') || 'Añadir'}</button>
                   </div>
                 </div>
               </div>
@@ -1549,7 +2038,7 @@ const TasksView = ({ state, setState }: any) => {
             layout
             key={task.id}
             className={cn(
-              "flex items-center gap-4 p-4 bg-white border border-[#e8e0f0] rounded-2xl group transition-all",
+              "flex items-center gap-4 p-4 bg-card border border-border-main rounded-2xl group transition-all",
               task.completed && "opacity-60"
             )}
           >
@@ -1560,13 +2049,13 @@ const TasksView = ({ state, setState }: any) => {
               }}
               className={cn(
                 "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
-                task.completed ? "bg-accent border-accent text-white" : "border-[#e8e0f0] hover:border-primary"
+                task.completed ? "bg-accent border-accent text-white" : "border-border-main hover:border-primary"
               )}
             >
               {task.completed && <CheckCircle2 className="w-4 h-4" />}
             </button>
             <div className="flex-1">
-              <div className={cn("text-sm font-medium", task.completed && "line-through text-[#a9a0b5]")}>
+              <div className={cn("text-sm font-medium text-text-main", task.completed && "line-through text-text-muted")}>
                 {task.text}
               </div>
               <div className="flex items-center gap-2 mt-1">
@@ -1574,7 +2063,7 @@ const TasksView = ({ state, setState }: any) => {
                   "text-[9px] uppercase font-bold tracking-wider",
                   task.priority === 'p1' ? "text-danger" : task.priority === 'p2' ? "text-warning" : "text-accent"
                 )}>
-                  {task.priority === 'p1' ? 'Crítica' : task.priority === 'p2' ? 'Importante' : 'Normal'}
+                  {task.priority === 'p1' ? (t('p1') || 'Crítica') : task.priority === 'p2' ? (t('p2') || 'Importante') : (t('p3') || 'Normal')}
                 </span>
               </div>
             </div>
@@ -1590,9 +2079,9 @@ const TasksView = ({ state, setState }: any) => {
           </motion.div>
         ))}
         {filteredTasks.length === 0 && (
-          <div className="text-center py-12 text-[#a9a0b5]">
+          <div className="text-center py-12 text-text-muted">
             <Target className="w-12 h-12 mx-auto mb-4 opacity-20" />
-            <p className="font-display font-medium">No hay tareas que mostrar</p>
+            <p className="font-display font-medium uppercase tracking-widest text-xs">{t('noTasks') || 'No hay tareas que mostrar'}</p>
           </div>
         )}
       </div>
@@ -1600,7 +2089,7 @@ const TasksView = ({ state, setState }: any) => {
   );
 };
 
-const TimerView = ({ state, setState }: any) => {
+const TimerView = ({ state, setState, t }: any) => {
   const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
@@ -1637,8 +2126,8 @@ const TimerView = ({ state, setState }: any) => {
         />
         
         <div className="relative z-10">
-          <div className="text-[10px] text-[#a9a0b5] font-bold uppercase tracking-widest mb-2">Sesión de Enfoque</div>
-          <div className="text-7xl font-display font-bold text-[#3d3450] tracking-tighter mb-8 transition-all duration-300">
+          <div className="text-[10px] text-text-muted font-bold uppercase tracking-widest mb-2">{t('focusSessionTitle') || 'Sesión de Enfoque'}</div>
+          <div className="text-7xl font-display font-bold text-text-main tracking-tighter mb-8 transition-all duration-300">
             {formatTime(state.timerState.timeLeft)}
           </div>
           
@@ -1651,9 +2140,9 @@ const TimerView = ({ state, setState }: any) => {
                 }));
                 setIsRunning(false);
               }}
-              className="w-14 h-14 bg-white border border-[#e8e0f0] rounded-full flex items-center justify-center hover:bg-[#f5f0eb]"
+              className="w-14 h-14 bg-card border border-border-main rounded-full flex items-center justify-center hover:bg-hover transition-colors"
             >
-              <RotateCcw className="w-6 h-6 text-[#7a7089]" />
+              <RotateCcw className="w-6 h-6 text-text-secondary" />
             </button>
             <button 
               onClick={() => setIsRunning(!isRunning)}
@@ -1661,8 +2150,8 @@ const TimerView = ({ state, setState }: any) => {
             >
               {isRunning ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 ml-1" />}
             </button>
-            <button className="w-14 h-14 bg-white border border-[#e8e0f0] rounded-full flex items-center justify-center hover:bg-[#f5f0eb]">
-              <Volume2 className="w-6 h-6 text-[#7a7089]" />
+            <button className="w-14 h-14 bg-card border border-border-main rounded-full flex items-center justify-center hover:bg-hover transition-colors">
+              <Volume2 className="w-6 h-6 text-text-secondary" />
             </button>
           </div>
 
@@ -1680,11 +2169,11 @@ const TimerView = ({ state, setState }: any) => {
                 className={cn(
                   "px-4 py-2 rounded-xl text-xs font-bold border transition-all",
                   state.timerState.totalTime === mins * 60 
-                    ? "bg-primary border-primary text-white" 
-                    : "bg-white border-[#e8e0f0] text-[#7a7089] hover:border-primary-light"
+                    ? "bg-primary border-primary text-white ring-2 ring-primary-light" 
+                    : "bg-card border-border-main text-text-secondary hover:border-primary-light"
                 )}
               >
-                {mins}m
+                {mins}{t('minutesShort') || 'm'}
               </button>
             ))}
           </div>
@@ -1694,7 +2183,7 @@ const TimerView = ({ state, setState }: any) => {
   );
 };
 
-const BrainDumpView = ({ state, setState, navigateTo }: any) => {
+const BrainDumpView = ({ state, setState, navigateTo, t }: any) => {
   const [text, setText] = useState('');
   const [category, setCategory] = useState<Category>('idea');
 
@@ -1732,37 +2221,37 @@ const BrainDumpView = ({ state, setState, navigateTo }: any) => {
         <textarea 
           value={text}
           onChange={e => setText(e.target.value)}
-          placeholder="Vierte tus pensamientos sin filtro..."
-          className="w-full bg-transparent border-none text-lg font-medium outline-none placeholder:text-[#a9a0b5] min-h-[150px] resize-none"
+          placeholder={t('brainDumpPlaceholder') || 'Vierte tus pensamientos sin filtro...'}
+          className="w-full bg-transparent border-none text-lg font-medium outline-none placeholder:text-text-muted text-text-main min-h-[150px] resize-none"
         />
-        <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-[#e8e0f0]">
+        <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-border-main">
           <select 
             value={category}
             onChange={e => setCategory(e.target.value as Category)}
-            className="bg-[#f5f0eb] border-none rounded-xl px-4 py-2 text-xs font-semibold outline-none"
+            className="bg-hover border border-border-main rounded-xl px-4 py-2 text-xs font-semibold outline-none text-text-main"
           >
-            <option value="trabajo">💼 Trabajo</option>
-            <option value="personal">🏠 Personal</option>
-            <option value="urgente">🔴 Urgente</option>
-            <option value="idea">💡 Idea</option>
-            <option value="compra">🛒 Compra</option>
+            <option value="trabajo">💼 {t('cat_work') || 'Trabajo'}</option>
+            <option value="personal">🏠 {t('cat_personal') || 'Personal'}</option>
+            <option value="urgente">🔴 {t('cat_urgent') || 'Urgente'}</option>
+            <option value="idea">💡 {t('cat_idea') || 'Idea'}</option>
+            <option value="compra">🛒 {t('cat_shopping') || 'Compra'}</option>
           </select>
           <div className="flex-1" />
-          <button onClick={convertToTask} className="btn btn-secondary text-sm">📋 Convertir a Tarea</button>
-          <button onClick={addDump} className="btn btn-primary text-sm px-8">Guardar</button>
+          <button onClick={convertToTask} className="btn btn-secondary text-sm">📋 {t('convertToTask') || 'Convertir a Tarea'}</button>
+          <button onClick={addDump} className="btn btn-primary text-sm px-8">{t('save') || 'Guardar'}</button>
         </div>
       </div>
 
       <div className="space-y-3">
         {state.brainDumps.map((dump: any) => (
-          <div key={dump.id} className="card p-4 hover:border-primary-light border-dashed">
-            <p className="text-sm leading-relaxed mb-3">{dump.text}</p>
-            <div className="flex items-center justify-between text-[10px] font-bold text-[#a9a0b5] uppercase tracking-wider">
+          <div key={dump.id} className="card p-4 hover:border-primary-light border-dashed bg-hover/10 transition-all">
+            <p className="text-sm leading-relaxed mb-3 text-text-main font-medium">{dump.text}</p>
+            <div className="flex items-center justify-between text-[10px] font-bold text-text-secondary uppercase tracking-wider">
               <span className={cn(
                 "px-2 py-0.5 rounded-full border",
-                dump.category === 'urgente' ? "text-danger border-danger-light" : "text-primary border-primary-light"
+                dump.category === 'urgente' ? "text-danger border-danger-light/30" : "text-primary border-primary-light/30"
               )}>
-                {dump.category}
+                {t(`cat_${dump.category}`) || dump.category}
               </span>
               <span>{new Date(dump.created).toLocaleDateString()}</span>
             </div>

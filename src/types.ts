@@ -97,6 +97,7 @@ export interface AppState {
     confetti: boolean;
     timerDuration: number;
     bodyDoubleType: 'focus' | 'calm' | 'cheer';
+    language: 'es' | 'en';
   };
   dailyPriority: string;
   launchCompleted: boolean;
@@ -111,6 +112,8 @@ export interface AppState {
   cycleStartDate: string;
   healthNotes: string;
   currentView: View;
+  rsdAnswers: string[];
+  bodyDoubleIntention: string;
 }
 
 export const INITIAL_STATE: AppState = {
@@ -129,7 +132,8 @@ export const INITIAL_STATE: AppState = {
                 sounds: true,
                 confetti: true,
                 timerDuration: 25,
-                bodyDoubleType: 'focus'
+                bodyDoubleType: 'focus',
+                language: 'es'
   },
   dailyPriority: '',
   launchCompleted: false,
@@ -143,5 +147,7 @@ export const INITIAL_STATE: AppState = {
   energyToday: 5,
   cycleStartDate: '',
   healthNotes: '',
-  currentView: 'dashboard'
+  currentView: 'dashboard',
+  rsdAnswers: ['', '', ''],
+  bodyDoubleIntention: ''
 };
