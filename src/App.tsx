@@ -46,7 +46,8 @@ import {
   Layout,
   Sparkles,
   Wand2,
-  Loader2
+  Loader2,
+  WifiOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
@@ -1217,33 +1218,55 @@ const SettingsView = ({ state, setState, resetStorage, t }: any) => {
       <div className="card">
         <div className="flex items-center gap-2 mb-6">
           <Database className="w-5 h-5 text-primary" />
-          <h3 className="font-display font-bold">{t('dataManagement')}</h3>
+          <h3 className="font-display font-bold">{t('backupTitle')}</h3>
         </div>
         
         <div className="grid sm:grid-cols-2 gap-4">
           <button 
             onClick={exportData} 
-            className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-[#e8e0f0] hover:border-primary-light hover:bg-[#fcfaff] transition-all group text-left"
+            className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-border-main hover:border-primary-light hover:bg-hover/10 transition-all group text-left"
           >
-            <div className="w-10 h-10 rounded-xl bg-primary-light flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
               <Download className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-sm font-bold text-text-main">{t('export')}</div>
+              <div className="text-sm font-bold text-text-main">{t('exportData')}</div>
               <p className="text-[10px] text-text-muted leading-relaxed">{t('exportDesc')}</p>
             </div>
           </button>
 
-          <label className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-[#e8e0f0] hover:border-primary-light hover:bg-[#fcfaff] transition-all group text-left cursor-pointer">
-            <div className="w-10 h-10 rounded-xl bg-secondary-light flex items-center justify-center text-secondary group-hover:scale-110 transition-transform">
+          <label className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-border-main hover:border-accent-light hover:bg-hover/10 transition-all group text-left cursor-pointer">
+            <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent group-hover:scale-110 transition-transform">
               <Upload className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-sm font-bold text-text-main">{t('import')}</div>
+              <div className="text-sm font-bold text-text-main">{t('importData')}</div>
               <p className="text-[10px] text-text-muted leading-relaxed">{t('importDesc')}</p>
             </div>
             <input type="file" className="hidden" accept=".json" onChange={importData} />
           </label>
+        </div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div className="card bg-accent/5 border-accent/20">
+          <div className="flex items-center gap-2 mb-3">
+            <ShieldCheck className="w-4 h-4 text-accent" />
+            <h4 className="text-sm font-bold text-text-main">{t('dataSecurityTitle')}</h4>
+          </div>
+          <p className="text-[10px] text-text-secondary leading-relaxed">
+            {t('dataSecurityDesc')}
+          </p>
+        </div>
+        
+        <div className="card bg-primary/5 border-primary/20">
+          <div className="flex items-center gap-2 mb-3">
+            <WifiOff className="w-4 h-4 text-primary" />
+            <h4 className="text-sm font-bold text-text-main">{t('offlineTitle')}</h4>
+          </div>
+          <p className="text-[10px] text-text-secondary leading-relaxed">
+            {t('offlineDesc')}
+          </p>
         </div>
       </div>
 

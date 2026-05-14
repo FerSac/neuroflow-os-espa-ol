@@ -43,11 +43,6 @@ export const translations = {
     resetConfirmDesc: "Esta acción borrará permanentemente TODOS los datos locales de NeuroFlow OS. No hay forma de recuperar esta información después de pulsar confirmar.",
     confirmDelete: "Confirmar Borrado",
     deleting: "Borrando...",
-    dataManagement: "Respaldo y Seguridad",
-    export: "Exportar Datos",
-    exportDesc: "Descarga localmente un archivo .json con toda tu configuración y registros.",
-    import: "Importar Datos",
-    importDesc: "Sube un archivo .json previamente exportado para recuperar tu información.",
     dangerZone: "Zona de Peligro",
     dangerZoneDesc: "Las siguientes acciones son irreversibles. Una vez eliminados, no se podrán recuperar tus tareas, hábitos ni historial de energía sin un backup previo.",
     deleteAll: "Borrar Base de Datos Local",
@@ -112,6 +107,19 @@ export const translations = {
     viewSubtitle_settings: "Personaliza tu entorno de NeuroFlow",
     viewSubtitle_guide: "Estrategias y flujos para cerebros ADHD",
 
+    // Backup & Data
+    backupTitle: "Copia de Seguridad y Datos",
+    exportData: "Exportar Datos (.json)",
+    exportDesc: "Descarga todas tus tareas, ajustes y victorias en un archivo.",
+    importData: "Importar Datos",
+    importDesc: "Carga un archivo de copia de seguridad previo para restaurar tu progreso.",
+    importSuccess: "¡Datos importados con éxito!",
+    importError: "Archivo no válido. Por favor, usa un archivo .json de NeuroFlow.",
+    dataSecurityTitle: "Seguridad de Datos",
+    dataSecurityDesc: "Toda tu información se guarda localmente en tu navegador. NeuroFlow no utiliza servidores externos para tus tareas, garantizando 100% de privacidad.",
+    offlineTitle: "Uso sin Internet",
+    offlineDesc: "Una vez que la aplicación carga por primera vez, puedes seguir añadiendo y completando tareas sin conexión a internet.",
+
     // Notifications & Tips
     definePriority: "Define tu Prioridad",
     definePriorityDesc: "Un enfoque claro reduce la ansiedad.",
@@ -143,8 +151,6 @@ export const translations = {
     hyperfocusGuardDesc: "Recordatorio cada 90min para tomar un descanso",
     soundsDesc: "Auditivos al completar tareas y metas",
     confettiDesc: "Efectos visuales festivos en tus victorias",
-    importSuccess: "Datos importados correctamente.",
-    importError: "Error al importar archivo. Asegúrate de que es un JSON válido.",
 
     // Dashboard View specific
     statTasksToday: "Tareas Hoy",
@@ -433,13 +439,8 @@ export const translations = {
     resetData: "Clear all data",
     resetConfirmTitle: "Are you absolutely sure?",
     resetConfirmDesc: "This action will permanently delete ALL local data from NeuroFlow OS. There is no way to recover this information after confirming.",
-    confirmDelete: "Confirm Delete",
+    confirmDelete: "Confirmar Delete",
     deleting: "Deleting...",
-    dataManagement: "Backup & Security",
-    export: "Export Data",
-    exportDesc: "Download a .json file locally with all your configuration and records.",
-    import: "Import Data",
-    importDesc: "Upload a previously exported .json file to recover your information.",
     dangerZone: "Danger Zone",
     dangerZoneDesc: "The following actions are irreversible. Once deleted, your tasks, habits, and energy history cannot be recovered without a previous backup.",
     deleteAll: "Clear Local Database",
@@ -504,6 +505,19 @@ export const translations = {
     viewSubtitle_settings: "Customize your NeuroFlow environment",
     viewSubtitle_guide: "Strategies and workflows for ADHD brains",
 
+    // Backup & Data
+    backupTitle: "Backup & Data",
+    exportData: "Export Data (.json)",
+    exportDesc: "Download all your tasks, settings, and wins into a file.",
+    importData: "Import Data",
+    importDesc: "Load a previous backup file to restore your progress.",
+    importSuccess: "Data imported successfully!",
+    importError: "Invalid file. Please use a NeuroFlow .json file.",
+    dataSecurityTitle: "Data Security",
+    dataSecurityDesc: "All your information is stored locally in your browser. NeuroFlow doesn't use external servers for your tasks, ensuring 100% privacy.",
+    offlineTitle: "Offline Usage",
+    offlineDesc: "Once the app loads for the first time, you can continue adding and completing tasks without an internet connection.",
+
     // Notifications & Tips
     definePriority: "Define your Priority",
     definePriorityDesc: "A clear focus reduces anxiety.",
@@ -535,8 +549,6 @@ export const translations = {
     hyperfocusGuardDesc: "Reminder every 90min to take a break",
     soundsDesc: "Audio feedback when completing tasks and goals",
     confettiDesc: "Festive visual effects on your victories",
-    importSuccess: "Data imported successfully.",
-    importError: "Error importing file. Make sure it's a valid JSON.",
 
     // Dashboard View specific
     statTasksToday: "Tasks Today",
