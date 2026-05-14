@@ -19,6 +19,7 @@ export const translations = {
     wins: "Victorias",
     travel: "Viaje",
     settings: "Ajustes",
+    guide: "Guía ADHD",
 
     // General
     confirm: "Confirmar",
@@ -88,6 +89,7 @@ export const translations = {
     viewTitle_wins: "Diario de Victorias",
     viewTitle_travel: "Kit de Viaje",
     viewTitle_settings: "Ajustes",
+    viewTitle_guide: "Guía de Inicio Rápido",
 
     // View Subtitles
     viewSubtitle_dashboard: "Tu centro de operaciones diario",
@@ -108,6 +110,7 @@ export const translations = {
     viewSubtitle_wins: "Celebra cada pequeña conquista",
     viewSubtitle_travel: "Que no se te olvide nada importante",
     viewSubtitle_settings: "Personaliza tu entorno de NeuroFlow",
+    viewSubtitle_guide: "Estrategias y flujos para cerebros ADHD",
 
     // Notifications & Tips
     definePriority: "Define tu Prioridad",
@@ -369,7 +372,25 @@ export const translations = {
     // Task list
     noTasks: "No hay tareas. ¡Disfruta el momento!",
     completed: "Completada",
-    pending: "Pendiente"
+    pending: "Pendiente",
+    
+    // Guide View
+    guide_workflow_title: "Flujo NeuroFlow 2.0",
+    guide_tip1_title: "1. Vaciado Primero",
+    guide_tip1_desc: "No guardes nada en tu cabeza. Usa el 'Vaciado Mental' para externalizar cada idea o pendiente.",
+    guide_tip2_title: "2. Simplifica (IA)",
+    guide_tip2_desc: "Si una tarea te abruma, usa el botón ✨ Simplificar. La IA la desglosará en pasos ridículamente pequeños.",
+    guide_tip3_title: "3. Prioridad Única",
+    guide_tip3_desc: "En la 'Apertura Matutina', elige solo UNA cosa que DEBAs hacer hoy. Ignora el resto hasta terminarla.",
+    guide_tip4_title: "4. Socio de Trabajo",
+    guide_tip4_desc: "¿Parálisis de tarea? Activa el 'Socio de Trabajo' para tener compañía virtual sin juicios mientras avanzas.",
+    guide_tip5_title: "5. Reconoce tus Wins",
+    guide_tip5_desc: "ADHD significa baja dopamina. Registra cada pequeña victoria para hackear tu sistema de recompensa.",
+    guide_adhd_tips_title: "Tips de Flujo ADHD",
+    guide_adhd_tip1: "💡 Regla de los 2 Minutos: Si algo toma menos de 2 minutos, hazlo AHORA.",
+    guide_adhd_tip2: "⏰ Pomodoro Elástico: Si 25 min es mucho, intenta 10 min de enfoque intenso.",
+    guide_adhd_tip3: "🎨 Visualiza el Final: Antes de empezar, imagina cómo se sentirá haber terminado.",
+    guide_adhd_tip4: "🚿 Refresh Sensorial: Si te bloqueas, agua fría en la cara o un estiramiento.",
   },
   en: {
     // Sidebar
@@ -390,6 +411,7 @@ export const translations = {
     wins: "Wins",
     travel: "Travel",
     settings: "Settings",
+    guide: "ADHD Guide",
 
     // General
     confirm: "Confirm",
@@ -459,6 +481,7 @@ export const translations = {
     viewTitle_wins: "Victory Journal",
     viewTitle_travel: "Travel Kit",
     viewTitle_settings: "Settings",
+    viewTitle_guide: "Quick-Start Guide",
 
     // View Subtitles
     viewSubtitle_dashboard: "Your daily operation center",
@@ -479,6 +502,7 @@ export const translations = {
     viewSubtitle_wins: "Celebrate every small victory",
     viewSubtitle_travel: "Don't forget anything important",
     viewSubtitle_settings: "Customize your NeuroFlow environment",
+    viewSubtitle_guide: "Strategies and workflows for ADHD brains",
 
     // Notifications & Tips
     definePriority: "Define your Priority",
@@ -740,7 +764,25 @@ export const translations = {
     // Task list
     noTasks: "No tasks. Enjoy the moment!",
     completed: "Completed",
-    pending: "Pending"
+    pending: "Pending",
+
+    // Guide View
+    guide_workflow_title: "NeuroFlow 2.0 Workflow",
+    guide_tip1_title: "1. Dump First",
+    guide_tip1_desc: "Don't keep anything in your head. Use the 'Brain Dump' to externalize every idea or task.",
+    guide_tip2_title: "2. Simplify (AI)",
+    guide_tip2_desc: "If a task overwhelms you, use the ✨ Simplify button. AI will break it down into ridiculously small steps.",
+    guide_tip3_title: "3. Single Priority",
+    guide_tip3_desc: "In the 'Morning Launch', choose only ONE thing you MUST do today. Ignore the rest until it's done.",
+    guide_tip4_title: "4. Body Doubling",
+    guide_tip4_desc: "Task paralysis? Activate the 'Focus Partner' for non-judgmental virtual company while you progress.",
+    guide_tip5_title: "5. Acknowledge Wins",
+    guide_tip5_desc: "ADHD means low dopamine. Register every small victory to hack your reward system.",
+    guide_adhd_tips_title: "ADHD Workflow Tips",
+    guide_adhd_tip1: "💡 2-Minute Rule: If it takes less than 2 minutes, do it NOW.",
+    guide_adhd_tip2: "⏰ Elastic Pomodoro: If 25 mins is too much, try 10 mins of intense focus.",
+    guide_adhd_tip3: "🎨 Visualize the End: Before starting, imagine how it will feel to be done.",
+    guide_adhd_tip4: "🚿 Sensory Refresh: If you get stuck, cold water on your face or a quick stretch.",
   }
 };
 

@@ -260,6 +260,7 @@ export default function App() {
               <SidebarItem icon={Rocket} label={t('morning')} active={state.currentView === 'morning'} onClick={() => navigateTo('morning')} />
               <SidebarItem icon={Target} label={t('tasks')} active={state.currentView === 'tasks'} onClick={() => navigateTo('tasks')} badge={getActiveTasksCount()} />
               <SidebarItem icon={Timer} label={t('timer')} active={state.currentView === 'timer'} onClick={() => navigateTo('timer')} />
+              <SidebarItem icon={Lightbulb} label={t('guide')} active={state.currentView === 'guide'} onClick={() => navigateTo('guide')} />
             </ul>
           </div>
 
@@ -1829,6 +1830,7 @@ function renderView(state: any, setState: any, navigateTo: any, resetStorage: an
     case 'impulse': return <ImpulseCheckerView t={t} />;
     case 'travel': return <TravelKitView state={state} setState={setState} t={t} />;
     case 'rescue': return <OverwhelmRescueView state={state} t={t} />;
+    case 'guide': return <GuideView state={state} t={t} />;
     default: return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-6">
         <AlertCircle className="w-16 h-16 text-text-muted mb-4 opacity-50" />
@@ -1846,6 +1848,48 @@ function renderView(state: any, setState: any, navigateTo: any, resetStorage: an
 }
 
 // --- View Components ---
+
+const GuideView = ({ state, t }: any) => {
+  return (
+    <div className="space-y-8 max-w-2xl mx-auto py-4">
+      <div className="card bg-linear-to-br from-primary/10 to-accent/10 border-primary/20">
+        <h3 className="text-xl font-display font-bold mb-4 flex items-center gap-2">
+          <Rocket className="w-6 h-6 text-primary" />
+          {t('guide_workflow_title')}
+        </h3>
+        <div className="space-y-6">
+          {[1, 2, 3, 4, 5].map(num => (
+            <div key={num} className="flex gap-4">
+              <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center shrink-0 font-bold text-sm">
+                {num}
+              </div>
+              <div>
+                <h4 className="font-bold text-text-main mb-1">{t(`guide_tip${num}_title`)}</h4>
+                <p className="text-xs text-text-secondary leading-relaxed">{t(`guide_tip${num}_desc`)}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="card">
+        <h3 className="text-xl font-display font-bold mb-6 flex items-center gap-2">
+          <Lightbulb className="w-6 h-6 text-warning" />
+          {t('guide_adhd_tips_title')}
+        </h3>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {[1, 2, 3, 4].map(num => (
+            <div key={num} className="p-4 bg-hover/50 rounded-2xl border border-border-main hover:border-primary-light transition-all">
+              <p className="text-xs font-medium text-text-main leading-relaxed">
+                {t(`guide_adhd_tip${num}`)}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const DashboardView = ({ state, setState, navigateTo, t }: any) => {
   const today = new Date().toDateString();

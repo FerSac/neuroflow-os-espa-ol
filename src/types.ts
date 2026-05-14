@@ -9,7 +9,7 @@ export type View =
   | 'braindump' | 'energy' | 'impulse' | 'dopamine' 
   | 'habits' | 'cycle' | 'meds' | 'sleep' 
   | 'rescue' | 'rsd' | 'bodydouble' | 'wins' 
-  | 'travel' | 'settings';
+  | 'travel' | 'settings' | 'guide';
 
 export interface SubTask {
   id: string;
