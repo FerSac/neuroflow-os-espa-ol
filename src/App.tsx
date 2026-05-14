@@ -130,7 +130,7 @@ export default function App() {
   const [notifPanelOpen, setNotifPanelOpen] = useState(false);
 
   const t = useCallback((key: string): string => {
-    const lang = (state.settings.language as Language) || 'es';
+    const lang = (state.settings.language as Language) || 'en';
     return (translations[lang] as any)[key] || key;
   }, [state.settings.language]);
 
@@ -144,7 +144,7 @@ export default function App() {
 
     const interval = setInterval(() => {
       if (state.settings.sounds) playSound(880, 'square', 0.3);
-      alert(t('focusGuardianAlert') || "🧠 Guardián de Enfoque: Llevas 90 minutos trabajando. ¡Tómate un respiro de 5 minutos!");
+      alert(t('focusGuardianAlert') || "🧠 Focus Guardian: You've been working for 90 minutes. Take a 5-minute break!");
     }, 90 * 60 * 1000);
 
     return () => clearInterval(interval);

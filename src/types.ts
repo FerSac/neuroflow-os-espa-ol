@@ -133,7 +133,7 @@ export const INITIAL_STATE: AppState = {
                 confetti: true,
                 timerDuration: 25,
                 bodyDoubleType: 'focus',
-                language: 'es'
+                language: 'en'
   },
   dailyPriority: '',
   launchCompleted: false,
