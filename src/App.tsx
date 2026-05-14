@@ -43,11 +43,15 @@ import {
   Lightbulb,
   Globe,
   Palette,
-  Layout
+  Layout,
+  Sparkles,
+  Wand2,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { useAppState } from './hooks/useAppState';
+import { breakdownTask, summarizeBrainDump } from './lib/gemini';
 import { View, Task, Priority, Category, INITIAL_STATE, Win } from './types';
 import { translations, Language } from './lib/translations';
 import { clsx, type ClassValue } from 'clsx';
@@ -1938,6 +1942,7 @@ const TasksView = ({ state, setState, t }: any) => {
   const [isAdding, setIsAdding] = useState(false);
   const [newTaskText, setNewTaskText] = useState('');
   const [priority, setPriority] = useState<Priority>('p3');
+  const [aiLoading, setAiLoading] = useState<string | null>(null);
 
   const addTask = () => {
     if (!newTaskText.trim()) return;
@@ -1955,9 +1960,42 @@ const TasksView = ({ state, setState, t }: any) => {
     setIsAdding(false);
   };
 
-  const filteredTasks = state.tasks.filter((t: any) => {
-    if (filter === 'pending') return !t.completed;
-    if (filter === 'completed') return t.completed;
+  const helpBreakdown = async (taskId: string, title: string) => {
+    setAiLoading(taskId);
+    const steps = await breakdownTask(title, state.settings.language);
+    if (steps.length > 0) {
+      const subtasks = steps.map(s => ({
+        id: 'sub_' + Math.random().toString(36).substr(2, 9),
+        text: s,
+        completed: false
+      }));
+      setState((prev: any) => ({
+        ...prev,
+        tasks: prev.tasks.map((tk: any) => 
+          tk.id === taskId ? { ...tk, subtasks: [...tk.subtasks, ...subtasks] } : tk
+        )
+      }));
+    }
+    setAiLoading(null);
+  };
+
+  const toggleSubtask = (taskId: string, subtaskId: string) => {
+    setState((prev: any) => ({
+      ...prev,
+      tasks: prev.tasks.map((tk: any) => 
+        tk.id === taskId ? {
+          ...tk,
+          subtasks: tk.subtasks.map((st: any) => 
+            st.id === subtaskId ? { ...st, completed: !st.completed } : st
+          )
+        } : tk
+      )
+    }));
+  };
+
+  const filteredTasks = state.tasks.filter((tk: any) => {
+    if (filter === 'pending') return !tk.completed;
+    if (filter === 'completed') return tk.completed;
     return true;
   });
 
@@ -2065,7 +2103,42 @@ const TasksView = ({ state, setState, t }: any) => {
                 )}>
                   {task.priority === 'p1' ? t('taskPriority_p1') : task.priority === 'p2' ? t('taskPriority_p2') : t('taskPriority_p3')}
                 </span>
+                {!task.completed && (
+                  <button 
+                    onClick={() => helpBreakdown(task.id, task.text)}
+                    disabled={aiLoading === task.id}
+                    className="flex items-center gap-1 text-[9px] font-bold text-primary px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-all ml-2"
+                  >
+                    {aiLoading === task.id ? (
+                      <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-2.5 h-2.5" />
+                    )}
+                    {aiLoading === task.id ? t('breakingDown') : t('simplify')}
+                  </button>
+                )}
               </div>
+              
+              {task.subtasks.length > 0 && (
+                <div className="mt-4 space-y-2 pl-2 border-l-2 border-border-main ml-2">
+                  {task.subtasks.map((st: any) => (
+                    <div key={st.id} className="flex items-center gap-2 group/sub">
+                      <button 
+                        onClick={() => toggleSubtask(task.id, st.id)}
+                        className={cn(
+                          "w-4 h-4 rounded border flex items-center justify-center transition-all",
+                          st.completed ? "bg-primary border-primary text-white" : "border-border-main group-hover/sub:border-primary"
+                        )}
+                      >
+                        {st.completed && <CheckCircle2 className="w-2.5 h-2.5" />}
+                      </button>
+                      <span className={cn("text-xs transition-all", st.completed ? "text-text-muted line-through" : "text-text-secondary")}>
+                        {st.text}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <button 
               onClick={() => {
@@ -2186,6 +2259,7 @@ const TimerView = ({ state, setState, t }: any) => {
 const BrainDumpView = ({ state, setState, navigateTo, t }: any) => {
   const [text, setText] = useState('');
   const [category, setCategory] = useState<Category>('idea');
+  const [aiAnalyzing, setAiAnalyzing] = useState(false);
 
   const addDump = () => {
     if (!text.trim()) return;
@@ -2197,6 +2271,37 @@ const BrainDumpView = ({ state, setState, navigateTo, t }: any) => {
     };
     setState((prev: any) => ({ ...prev, brainDumps: [dump, ...prev.brainDumps] }));
     setText('');
+  };
+
+  const handleSmartExtract = async () => {
+    if (!text.trim()) return;
+    setAiAnalyzing(true);
+    const result = await summarizeBrainDump(text, state.settings.language);
+    if (result) {
+      if (result.tasks && result.tasks.length > 0) {
+        const newTasks = result.tasks.map((tText: string) => ({
+          id: 'task_' + Math.random().toString(36).substr(2, 9),
+          text: tText,
+          priority: 'p3',
+          dueDate: '',
+          completed: false,
+          created: new Date().toISOString(),
+          subtasks: []
+        }));
+        setState((prev: any) => ({ ...prev, tasks: [...newTasks, ...prev.tasks] }));
+      }
+      
+      const dump: any = {
+        id: 'dump_' + Date.now(),
+        text: `${result.summary} (extracted from dump)`,
+        category: result.category || 'idea',
+        created: new Date().toISOString()
+      };
+      setState((prev: any) => ({ ...prev, brainDumps: [dump, ...prev.brainDumps] }));
+      setText('');
+      navigateTo('tasks');
+    }
+    setAiAnalyzing(false);
   };
 
   const convertToTask = () => {
@@ -2237,6 +2342,14 @@ const BrainDumpView = ({ state, setState, navigateTo, t }: any) => {
             <option value="compra">{t('braindumpCategory_compra')}</option>
           </select>
           <div className="flex-1" />
+          <button 
+            onClick={handleSmartExtract} 
+            disabled={aiAnalyzing || !text.trim()}
+            className="btn btn-secondary text-sm flex gap-2 items-center"
+          >
+            {aiAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+            {aiAnalyzing ? t('aiThinking') : t('braindumpSmartExtract')}
+          </button>
           <button onClick={convertToTask} className="btn btn-secondary text-sm">{t('convertToTask')}</button>
           <button onClick={addDump} className="btn btn-primary text-sm px-8">{t('save')}</button>
         </div>

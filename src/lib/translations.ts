@@ -120,11 +120,6 @@ export const translations = {
     overloadDetectedDesc: "Tienes {n} tareas pendientes. ¿Reducimos?",
     dailyStrategy: "Estrategia del día",
     focusGuardianAlert: "🧠 Guardián de Enfoque: Llevas 90 minutos trabajando. ¡Tómate un respiro de 5 minutos!",
-    notifTitle: "Recomendaciones",
-    clearMind: "Mente Despejada",
-    noNotifs: "No hay recordatorios pendientes por ahora.",
-    notifDisclaimer: "Estas sugerencias se basan en tu estado actual",
-    notifCenterTitle: "Centro de Notificaciones y Consejos",
     tips: [
       "El perfeccionismo es una forma de procrastinación. ¡Hazlo imperfecto!",
       "Divide esa tarea grande en 3 pasos ridículamente pequeños.",
@@ -354,6 +349,11 @@ export const translations = {
     braindumpCategory_idea: "💡 Idea",
     braindumpCategory_compra: "🛒 Compra",
     convertToTask: "📋 Convertir a Tarea",
+    braindumpSmartExtract: "Extracción Inteligente (AI)",
+    simplify: "✨ Simplificar",
+    breakingDown: "Desglosando...",
+    aiThinking: "IA pensando...",
+    magicSummary: "✨ Resumen Mágico",
 
     // Miscellaneous
     featureUnavailable: "Funcionalidad no disponible",
@@ -491,11 +491,6 @@ export const translations = {
     overloadDetectedDesc: "You have {n} pending tasks. Should we reduce?",
     dailyStrategy: "Daily Strategy",
     focusGuardianAlert: "🧠 Focus Guardian: You've been working for 90 minutes. Take a 5-minute break!",
-    notifTitle: "Recommendations",
-    clearMind: "Clear Mind",
-    noNotifs: "No pending reminders for now.",
-    notifDisclaimer: "These suggestions are based on your current state",
-    notifCenterTitle: "Notification and Tips Center",
     tips: [
       "Perfectionism is a form of procrastination. Make it imperfect!",
       "Break that big task into 3 ridiculously small steps.",
@@ -725,6 +720,11 @@ export const translations = {
     braindumpCategory_idea: "💡 Idea",
     braindumpCategory_compra: "🛒 Shopping",
     convertToTask: "📋 Convert to Task",
+    braindumpSmartExtract: "Smart Extraction (AI)",
+    simplify: "✨ Simplify",
+    breakingDown: "Breaking down...",
+    aiThinking: "AI thinking...",
+    magicSummary: "✨ Magic Summary",
 
     // Miscellaneous
     featureUnavailable: "Feature unavailable",
