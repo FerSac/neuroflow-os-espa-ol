@@ -28,6 +28,7 @@ export const translations = {
     add: "Añadir",
     back: "Volver",
     edit: "Editar",
+    next: "Siguiente →",
 
     // Settings
     language: "Idioma",
@@ -41,6 +42,25 @@ export const translations = {
     resetConfirmDesc: "Esta acción borrará permanentemente TODOS los datos locales de NeuroFlow OS. No hay forma de recuperar esta información después de pulsar confirmar.",
     confirmDelete: "Confirmar Borrado",
     deleting: "Borrando...",
+    dataManagement: "Respaldo y Seguridad",
+    export: "Exportar Datos",
+    exportDesc: "Descarga localmente un archivo .json con toda tu configuración y registros.",
+    import: "Importar Datos",
+    importDesc: "Sube un archivo .json previamente exportado para recuperar tu información.",
+    dangerZone: "Zona de Peligro",
+    dangerZoneDesc: "Las siguientes acciones son irreversibles. Una vez eliminados, no se podrán recuperar tus tareas, hábitos ni historial de energía sin un backup previo.",
+    deleteAll: "Borrar Base de Datos Local",
+    deletingDb: "Borrando Base de Datos...",
+    notifCenterTitle: "Centro de Notificaciones y Consejos",
+    notifTitle: "Recomendaciones",
+    clearMind: "Mente Despejada",
+    noNotifs: "No hay recordatorios pendientes por ahora.",
+    notifDisclaimer: "Estas sugerencias se basan en tu estado actual",
+    start: "Inicio",
+    pause: "Pausa",
+    continue: "Continuar",
+    milestone: "Hito",
+    focusSessionTitle: "Sesión de Enfoque",
 
     // Sections
     principal: "Principal",
@@ -195,6 +215,7 @@ export const translations = {
     newHabitPlaceholder: "Nuevo hábito...",
     habitStreak: "🔥 Racha: {n} días",
     habitNoHabits: "Sin hábitos aún. Empieza con algo pequeño.",
+    weekdays: ["L", "M", "X", "J", "V", "S", "D"],
 
     // Meds View
     medNamePlaceholder: "Nombre (ej: Ritalin)",
@@ -252,6 +273,7 @@ export const translations = {
     follicularDesc: "Energía subiendo. Proyectos creativos, brainstorming.",
     ovulationDesc: "Máxima energía social. Reuniones importantes.",
     lutealDesc: "Organización, cierre de proyectos, administración.",
+    phase: "Fase",
 
     // Sleep View
     sleepTrackerTitle: "Rastreador de Sueño",
@@ -377,6 +399,7 @@ export const translations = {
     add: "Add",
     back: "Back",
     edit: "Edit",
+    next: "Next →",
 
     // Settings
     language: "Language",
@@ -390,6 +413,25 @@ export const translations = {
     resetConfirmDesc: "This action will permanently delete ALL local data from NeuroFlow OS. There is no way to recover this information after confirming.",
     confirmDelete: "Confirm Delete",
     deleting: "Deleting...",
+    dataManagement: "Backup & Security",
+    export: "Export Data",
+    exportDesc: "Download a .json file locally with all your configuration and records.",
+    import: "Import Data",
+    importDesc: "Upload a previously exported .json file to recover your information.",
+    dangerZone: "Danger Zone",
+    dangerZoneDesc: "The following actions are irreversible. Once deleted, your tasks, habits, and energy history cannot be recovered without a previous backup.",
+    deleteAll: "Clear Local Database",
+    deletingDb: "Deleting Database...",
+    notifCenterTitle: "Notification and Tips Center",
+    notifTitle: "Recommendations",
+    clearMind: "Clear Mind",
+    noNotifs: "No pending reminders for now.",
+    notifDisclaimer: "These suggestions are based on your current state",
+    start: "Start",
+    pause: "Pause",
+    continue: "Continue",
+    milestone: "Milestone",
+    focusSessionTitle: "Focus Session",
 
     // Sections
     principal: "Principal",
@@ -544,6 +586,7 @@ export const translations = {
     newHabitPlaceholder: "New habit...",
     habitStreak: "🔥 Streak: {n} days",
     habitNoHabits: "No habits yet. Start small.",
+    weekdays: ["M", "T", "W", "T", "F", "S", "S"],
 
     // Meds View
     medNamePlaceholder: "Name (e.g., Ritalin)",
@@ -601,6 +644,7 @@ export const translations = {
     follicularDesc: "Energy rising. Creative projects, brainstorming.",
     ovulationDesc: "Max social energy. Important meetings.",
     lutealDesc: "Organization, finishing projects, administration.",
+    phase: "Phase",
 
     // Sleep View
     sleepTrackerTitle: "Sleep Tracker",

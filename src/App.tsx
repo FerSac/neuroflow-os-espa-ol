@@ -244,7 +244,7 @@ export default function App() {
           </div>
           <div>
             <div className="font-display font-bold text-text-main">NeuroFlow OS</div>
-            <div className="text-[10px] text-text-muted font-normal uppercase tracking-wider">{t('adhdCommandCentre') || 'ADHD Command Centre'}</div>
+            <div className="text-[10px] text-text-muted font-normal uppercase tracking-wider">{t('adhdCommandCentre')}</div>
           </div>
         </div>
 
@@ -348,7 +348,7 @@ export default function App() {
                   "relative w-10 h-10 border border-border-main bg-card rounded-xl flex items-center justify-center hover:bg-hover shadow-sm transition-all focus:ring-2 focus:ring-primary/40 outline-none",
                   notifPanelOpen && "ring-2 ring-primary border-primary"
                 )}
-                title={t('notifCenterTitle') || 'Centro de Notificaciones y Consejos'}
+                title={t('notifCenterTitle')}
               >
                 <Bell className={cn("w-5 h-5 transition-colors", getNotifications().length > 0 ? "text-primary fill-primary/10 animate-pulse-slow" : "text-text-muted")} />
                 {getNotifications().length > 0 && (
@@ -369,7 +369,7 @@ export default function App() {
                       <div className="p-4 border-b border-border-main bg-linear-to-r from-primary/10 to-secondary/10 font-display font-bold text-sm text-text-main flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Rocket className="w-4 h-4 text-primary" />
-                          <span>{t('notifTitle') || 'Recomendaciones'}</span>
+                          <span>{t('notifTitle')}</span>
                         </div>
                         <button onClick={() => setNotifPanelOpen(false)} className="text-text-muted hover:text-text-main p-1 hover:bg-hover rounded-md transition-colors"><Plus className="w-4 h-4 rotate-45" /></button>
                       </div>
@@ -396,14 +396,14 @@ export default function App() {
                             <div className="w-12 h-12 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary/10">
                               <CheckCircle2 className="w-6 h-6 text-primary/40" />
                             </div>
-                            <p className="text-[11px] text-text-muted uppercase font-bold tracking-widest">{t('clearMind') || 'Mente Despejada'}</p>
-                            <p className="text-[10px] text-text-secondary mt-1">{t('noNotifs') || 'No hay recordatorios pendientes por ahora.'}</p>
+                            <p className="text-[11px] text-text-muted uppercase font-bold tracking-widest">{t('clearMind')}</p>
+                            <p className="text-[10px] text-text-secondary mt-1">{t('noNotifs')}</p>
                           </div>
                         )}
                       </div>
                       {getNotifications().length > 0 && (
                         <div className="p-3 bg-hover/30 border-t border-border-main text-center">
-                           <p className="text-[9px] text-text-muted italic">{t('notifDisclaimer') || 'Estas sugerencias se basan en tu estado actual'}</p>
+                           <p className="text-[9px] text-text-muted italic">{t('notifDisclaimer')}</p>
                         </div>
                       )}
                     </motion.div>
@@ -496,7 +496,7 @@ const MorningLaunchView = ({ state, setState, navigateTo, t }: any) => {
         )}
 
         {step !== 1 && (
-          <button onClick={nextStep} className="btn btn-primary btn-lg w-full">{t('next') || 'Siguiente →'}</button>
+          <button onClick={nextStep} className="btn btn-primary btn-lg w-full">{t('next')}</button>
         )}
       </motion.div>
     </div>
@@ -641,12 +641,12 @@ const EnergyTrackerView = ({ state, setState, t }: any) => {
 
 const DopamineMenuView = ({ state, setState, t }: any) => {
   const activities = [
-    { emoji: '🧘', name: t('dopamine_stretches'), desc: t('dopamine_stretches_desc'), time: '2 min' },
-    { emoji: '💃', name: t('dopamine_dance'), desc: t('dopamine_dance_desc'), time: '3 min' },
-    { emoji: '🌬️', name: t('dopamine_breathing'), desc: t('dopamine_breathing_desc'), time: '2 min' },
-    { emoji: '🎨', name: t('dopamine_doodle'), desc: t('dopamine_doodle_desc'), time: '5 min' },
-    { emoji: '🚶', name: t('dopamine_walk'), desc: t('dopamine_walk_desc'), time: '15 min' },
-    { emoji: '📦', name: t('dopamine_organize'), desc: t('dopamine_organize_desc'), time: '10 min' }
+    { emoji: '🧘', name: t('dopamine_stretches'), desc: t('dopamine_stretches_desc'), time: `2 ${t('minutesShort')}` },
+    { emoji: '💃', name: t('dopamine_dance'), desc: t('dopamine_dance_desc'), time: `3 ${t('minutesShort')}` },
+    { emoji: '🌬️', name: t('dopamine_breathing'), desc: t('dopamine_breathing_desc'), time: `2 ${t('minutesShort')}` },
+    { emoji: '🎨', name: t('dopamine_doodle'), desc: t('dopamine_doodle_desc'), time: `5 ${t('minutesShort')}` },
+    { emoji: '🚶', name: t('dopamine_walk'), desc: t('dopamine_walk_desc'), time: `15 ${t('minutesShort')}` },
+    { emoji: '📦', name: t('dopamine_organize'), desc: t('dopamine_organize_desc'), time: `10 ${t('minutesShort')}` }
   ];
 
   return (
@@ -720,7 +720,7 @@ const HabitTrackerView = ({ state, setState, t }: any) => {
     setState((prev: any) => ({ ...prev, habits: newHabits }));
   };
 
-  const days = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+  const weekdays = t('weekdays') as unknown as string[];
 
   return (
     <div className="space-y-6">
@@ -750,7 +750,7 @@ const HabitTrackerView = ({ state, setState, t }: any) => {
                 <div className="text-[10px] text-text-muted">{t('habitStreak').replace('{n}', habit.streak)}</div>
               </div>
               <div className="flex gap-1.5">
-                {days.map((d, i) => (
+                {weekdays.map((d, i) => (
                   <button 
                     key={i}
                     onClick={() => toggleDay(habit.id, i)}
@@ -1095,9 +1095,9 @@ const SettingsView = ({ state, setState, resetStorage, t }: any) => {
         const parsed = JSON.parse(event.target?.result as string);
         setState({ ...INITIAL_STATE, ...parsed });
         if (state.settings.sounds) playSound(880, 'sine', 0.2);
-        alert(t('importSuccess') || 'Datos importados correctamente.');
+        alert(t('importSuccess'));
       } catch (err) {
-        alert(t('importError') || 'Error al importar archivo. Asegúrate de que es un JSON válido.');
+        alert(t('importError'));
       }
     };
     reader.readAsText(file);
@@ -1137,10 +1137,10 @@ const SettingsView = ({ state, setState, resetStorage, t }: any) => {
         </h3>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { id: 'default', label: t('theme_default') || 'Estándar', colors: 'bg-primary' },
-            { id: 'dark', label: t('theme_dark') || 'Oscuro', colors: 'bg-slate-900 border border-white/20' },
-            { id: 'boho', label: t('theme_boho') || 'Boho', colors: 'bg-[#c4956a]' },
-            { id: 'minimal', label: t('theme_minimal') || 'Minimal', colors: 'bg-[#666]' },
+            { id: 'default', label: t('theme_default'), colors: 'bg-primary' },
+            { id: 'dark', label: t('theme_dark'), colors: 'bg-slate-900 border border-white/20' },
+            { id: 'boho', label: t('theme_boho'), colors: 'bg-[#c4956a]' },
+            { id: 'minimal', label: t('theme_minimal'), colors: 'bg-[#666]' },
           ].map(th => (
             <button 
               key={th.id}
@@ -1177,9 +1177,9 @@ const SettingsView = ({ state, setState, resetStorage, t }: any) => {
         
         <div className="space-y-4">
           {[
-            { id: 'hyperfocusGuard', label: 'Hyperfocus Guard', desc: t('hyperfocusGuardDesc') },
+            { id: 'hyperfocusGuard', label: t('hyperfocusGuard'), desc: t('hyperfocusGuardDesc') },
             { id: 'sounds', label: t('sounds'), desc: t('soundsDesc') },
-            { id: 'confetti', label: 'Confetti', desc: t('confettiDesc') }
+            { id: 'confetti', label: t('confetti'), desc: t('confettiDesc') }
           ].map((s) => (
             <div key={s.id} className="flex items-center justify-between p-4 border border-border-main rounded-2xl bg-hover/30">
               <div>
@@ -1212,7 +1212,7 @@ const SettingsView = ({ state, setState, resetStorage, t }: any) => {
       <div className="card">
         <div className="flex items-center gap-2 mb-6">
           <Database className="w-5 h-5 text-primary" />
-          <h3 className="font-display font-bold">{t('dataManagement') || 'Respaldo y Seguridad'}</h3>
+          <h3 className="font-display font-bold">{t('dataManagement')}</h3>
         </div>
         
         <div className="grid sm:grid-cols-2 gap-4">
@@ -1225,7 +1225,7 @@ const SettingsView = ({ state, setState, resetStorage, t }: any) => {
             </div>
             <div>
               <div className="text-sm font-bold text-text-main">{t('export')}</div>
-              <p className="text-[10px] text-text-muted leading-relaxed">{t('exportDesc') || 'Descarga localmente un archivo .json con toda tu configuración y registros.'}</p>
+              <p className="text-[10px] text-text-muted leading-relaxed">{t('exportDesc')}</p>
             </div>
           </button>
 
@@ -1235,7 +1235,7 @@ const SettingsView = ({ state, setState, resetStorage, t }: any) => {
             </div>
             <div>
               <div className="text-sm font-bold text-text-main">{t('import')}</div>
-              <p className="text-[10px] text-text-muted leading-relaxed">{t('importDesc') || 'Sube un archivo .json previamente exportado para recuperar tu información.'}</p>
+              <p className="text-[10px] text-text-muted leading-relaxed">{t('importDesc')}</p>
             </div>
             <input type="file" className="hidden" accept=".json" onChange={importData} />
           </label>
@@ -1245,11 +1245,11 @@ const SettingsView = ({ state, setState, resetStorage, t }: any) => {
       <div className="card border-danger-light bg-danger-light/5">
         <div className="flex items-center gap-2 mb-4">
           <AlertTriangle className="w-5 h-5 text-danger" />
-          <h3 className="font-display font-bold text-danger">{t('dangerZone') || 'Zona de Peligro'}</h3>
+          <h3 className="font-display font-bold text-danger">{t('dangerZone')}</h3>
         </div>
         
         <p className="text-xs text-text-secondary mb-6 leading-relaxed">
-          {t('dangerZoneDesc') || 'Las siguientes acciones son **irreversibles**. Una vez eliminados, no se podrán recuperar tus tareas, hábitos ni historial de energía sin un backup previo.'}
+          {t('dangerZoneDesc')}
         </p>
 
         <button 
@@ -1265,12 +1265,12 @@ const SettingsView = ({ state, setState, resetStorage, t }: any) => {
           {isResetting ? (
             <>
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              {t('deletingDb') || 'Borrando Base de Datos...'}
+              {t('deletingDb')}
             </>
           ) : (
             <>
               <Trash2 className="w-4 h-4" />
-              {t('deleteAll') || 'Borrar Base de Datos Local'}
+              {t('deleteAll')}
             </>
           )}
         </button>
@@ -1298,9 +1298,9 @@ const SettingsView = ({ state, setState, resetStorage, t }: any) => {
                 <div className="w-16 h-16 bg-danger/10 rounded-full flex items-center justify-center mb-4 text-danger">
                   <AlertTriangle className="w-8 h-8" />
                 </div>
-                <h3 className="text-lg font-bold text-text-main mb-2">{t('confirmDeleteTitle') || '¿Estás absolutamente seguro?'}</h3>
+                <h3 className="text-lg font-bold text-text-main mb-2">{t('resetConfirmTitle')}</h3>
                 <p className="text-sm text-text-muted leading-relaxed mb-8">
-                  {t('confirmDeleteDesc') || 'Esta acción borrará permanentemente TODOS los datos locales de NeuroFlow OS. No hay forma de recuperar esta información después de pulsar confirmar.'}
+                  {t('resetConfirmDesc')}
                 </p>
                 <div className="flex gap-3 w-full">
                   <button 
@@ -1329,7 +1329,7 @@ const SettingsView = ({ state, setState, resetStorage, t }: any) => {
                         : "bg-danger text-white hover:bg-danger-dark shadow-[0_0_15px_rgba(239,68,68,0.3)]"
                     )}
                   >
-                    {isResetting ? (t('deleting') || 'Borrando...') : (t('confirmDelete') || 'Confirmar Borrado')}
+                    {isResetting ? t('deleting') : t('confirmDelete')}
                   </button>
                 </div>
               </div>
@@ -1374,7 +1374,7 @@ const CycleSyncView = ({ state, setState, t }: any) => {
         {phase && (
           <div className="text-center p-6 bg-primary/5 rounded-2xl border border-primary-light/30">
             <div className="text-5xl mb-4">{phase.emoji}</div>
-            <h3 className={cn("font-display font-bold text-xl mb-2", phase.color)}>{t('phase') || 'Fase'} {phase.name}</h3>
+            <h3 className={cn("font-display font-bold text-xl mb-2", phase.color)}>{t('phase')} {phase.name}</h3>
             <p className="text-xs text-text-secondary leading-relaxed">
               {phase.desc}
             </p>
@@ -1633,8 +1633,8 @@ const BodyDoubleView = ({ state, setState, t }: any) => {
                   />
                 </div>
                 <div className="flex justify-between w-full mt-2 text-[10px] text-text-muted font-bold uppercase tracking-widest">
-                  <span>{t('start') || 'Inicio'}</span>
-                  <span>{t('milestone') || 'Hito'}: 5 min</span>
+                  <span>{t('start')}</span>
+                  <span>{t('milestone')}: 5 min</span>
                 </div>
               </div>
 
@@ -1647,7 +1647,7 @@ const BodyDoubleView = ({ state, setState, t }: any) => {
                   )}
                 >
                   {isActive ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-1" />}
-                  {isActive ? t('pause') || 'Pausa' : t('continue') || 'Continuar'}
+                  {isActive ? t('pause') : t('continue')}
                 </button>
                 <button 
                   onClick={() => setShowOverwhelm(true)}
@@ -1771,10 +1771,10 @@ const TravelKitView = ({ state, setState, t }: any) => {
           <input 
             value={text}
             onChange={e => setText(e.target.value)}
-            placeholder={t('travelPlaceholder') || 'Item para el viaje...'}
+            placeholder={t('travelPlaceholder')}
             className="flex-1 bg-hover border border-border-main rounded-xl px-4 py-2 text-sm font-medium outline-none text-text-main focus:border-primary-light transition-all"
           />
-          <button onClick={addItem} className="btn btn-primary btn-sm">{t('add') || 'Añadir'}</button>
+          <button onClick={addItem} className="btn btn-primary btn-sm">{t('add')}</button>
         </div>
 
         <div className="space-y-2">
@@ -1828,13 +1828,13 @@ function renderView(state: any, setState: any, navigateTo: any, resetStorage: an
     default: return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-6">
         <AlertCircle className="w-16 h-16 text-text-muted mb-4 opacity-50" />
-        <h2 className="text-xl font-display font-bold text-text-main">{t('featureUnavailable') || 'Funcionalidad no disponible'}</h2>
-        <p className="text-text-secondary">{t('inDevelopment') || 'Esta vista está en desarrollo para el Centro de Control.'}</p>
+        <h2 className="text-xl font-display font-bold text-text-main">{t('featureUnavailable')}</h2>
+        <p className="text-text-secondary">{t('inDevelopment')}</p>
         <button 
           onClick={() => navigateTo('dashboard')}
           className="mt-6 btn btn-primary"
         >
-          {t('backToDashboard') || 'Volver al Panel General'}
+          {t('backToDashboard')}
         </button>
       </div>
     );
@@ -1852,10 +1852,10 @@ const DashboardView = ({ state, setState, navigateTo, t }: any) => {
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: t('statsTasksToday') || 'Tareas Hoy', value: todayTasks.length, icon: Target },
-          { label: t('statsCompleted') || 'Completadas', value: completedToday, icon: CheckCircle2 },
-          { label: t('statsFocusMinutes') || 'Min Foco', value: state.timerState.totalFocusMinutes, icon: Timer },
-          { label: t('statsWinsToday') || 'Wins Hoy', value: state.wins.filter((w: any) => new Date(w.date).toDateString() === today).length, icon: Trophy }
+          { label: t('statTasksToday'), value: todayTasks.length, icon: Target },
+          { label: t('statCompleted'), value: completedToday, icon: CheckCircle2 },
+          { label: t('statFocusMinutes'), value: state.timerState.totalFocusMinutes, icon: Timer },
+          { label: t('statWinsToday'), value: state.wins.filter((w: any) => new Date(w.date).toDateString() === today).length, icon: Trophy }
         ].map((stat, idx) => (
           <div key={idx} className="bg-card border border-border-main p-4 rounded-xl text-center">
             <stat.icon className="w-5 h-5 mx-auto mb-2 text-text-muted" />
@@ -1867,7 +1867,7 @@ const DashboardView = ({ state, setState, navigateTo, t }: any) => {
 
       {state.dailyPriority && (
         <div className="bg-linear-to-r from-primary-light/30 to-secondary-light/30 rounded-2xl p-6 text-center border border-primary-light/20 shadow-sm">
-          <div className="text-[10px] uppercase tracking-widest font-bold text-primary mb-2">🎯 {t('dailyPriorityTitle') || 'Prioridad de Hoy'}</div>
+          <div className="text-[10px] uppercase tracking-widest font-bold text-primary mb-2">🎯 {t('dailyPriorityTitle')}</div>
           <div className="text-xl font-display font-bold text-text-main">{state.dailyPriority}</div>
         </div>
       )}
@@ -1876,9 +1876,9 @@ const DashboardView = ({ state, setState, navigateTo, t }: any) => {
         <div className="card">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-display font-bold flex items-center gap-2">
-              <Target className="w-5 h-5 text-primary" /> {t('pendingTasksTitle') || 'Tareas Pendientes'}
+              <Target className="w-5 h-5 text-primary" /> {t('taskPending')}
             </h3>
-            <button onClick={() => navigateTo('tasks')} className="text-xs font-semibold text-primary">{t('viewAll') || 'Ver todas'}</button>
+            <button onClick={() => navigateTo('tasks')} className="text-xs font-semibold text-primary">{t('taskAll')}</button>
           </div>
           <div className="space-y-2">
             {state.tasks.filter((t: any) => !t.completed).slice(0, 5).map((task: any) => (
@@ -1897,7 +1897,7 @@ const DashboardView = ({ state, setState, navigateTo, t }: any) => {
           {state.tasks.filter((t: any) => !t.completed).length === 0 && (
               <div className="text-center py-8 text-text-muted">
                 <CheckCircle2 className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                <p className="text-xs uppercase font-bold tracking-widest">{t('allClear') || '¡Todo despejado!'}</p>
+                <p className="text-xs uppercase font-bold tracking-widest">{t('noTasksClear')}</p>
               </div>
             )}
           </div>
@@ -1906,9 +1906,9 @@ const DashboardView = ({ state, setState, navigateTo, t }: any) => {
         <div className="card">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-display font-bold flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-secondary" /> {t('recentWinsTitle') || 'Wins Recientes'}
+              <Trophy className="w-5 h-5 text-secondary" /> {t('winsRecent')}
             </h3>
-            <button onClick={() => navigateTo('wins')} className="text-xs font-semibold text-primary">{t('journal') || 'Journal'}</button>
+            <button onClick={() => navigateTo('wins')} className="text-xs font-semibold text-primary">{t('winsJournal')}</button>
           </div>
           <div className="space-y-2">
             {state.wins.slice(0, 3).map((win: any) => (
@@ -1923,7 +1923,7 @@ const DashboardView = ({ state, setState, navigateTo, t }: any) => {
             {state.wins.length === 0 && (
               <div className="text-center py-8 text-text-muted">
                 <Trophy className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                <p className="text-xs uppercase font-bold tracking-widest">{t('emptyWins') || 'Tu diario está vacío'}</p>
+                <p className="text-xs uppercase font-bold tracking-widest">{t('winsEmpty')}</p>
               </div>
             )}
           </div>
@@ -1974,7 +1974,7 @@ const TasksView = ({ state, setState, t }: any) => {
                 filter === f ? "bg-primary text-white shadow-sm" : "text-text-secondary hover:bg-hover"
               )}
             >
-              {f === 'all' ? (t('filterAll') || 'Todas') : f === 'pending' ? (t('filterPending') || 'Pendientes') : (t('filterDone') || 'Hechas')}
+              {f === 'all' ? t('taskAll') : f === 'pending' ? t('taskPending') : t('taskCompleted')}
             </button>
           ))}
         </div>
@@ -1982,7 +1982,7 @@ const TasksView = ({ state, setState, t }: any) => {
           onClick={() => setIsAdding(true)}
           className="btn btn-primary btn-sm flex gap-2"
         >
-          <Plus className="w-4 h-4" /> {t('newTask') || 'Nueva Tarea'}
+          <Plus className="w-4 h-4" /> {t('newTask')}
         </button>
       </div>
 
@@ -1998,7 +1998,7 @@ const TasksView = ({ state, setState, t }: any) => {
               <div className="space-y-4">
                 <input 
                   autoFocus
-                  placeholder={t('newTaskPlaceholder') || '¿En qué quieres enfocarte?'} 
+                  placeholder={t('newTaskPlaceholder')} 
                   className="w-full bg-transparent border-none text-lg font-display font-medium outline-none placeholder:text-text-muted text-text-main"
                   value={newTaskText}
                   onChange={e => setNewTaskText(e.target.value)}
@@ -2017,13 +2017,13 @@ const TasksView = ({ state, setState, t }: any) => {
                             : "border-border-main text-text-secondary"
                         )}
                       >
-                        {p === 'p1' ? (t('p1') || 'Crítica') : p === 'p2' ? (t('p2') || 'Importante') : (t('p3') || 'Normal')}
+                        {p === 'p1' ? t('taskPriority_p1') : p === 'p2' ? t('taskPriority_p2') : t('taskPriority_p3')}
                       </button>
                     ))}
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => setIsAdding(false)} className="btn text-sm">{t('cancel') || 'Cancelar'}</button>
-                    <button onClick={addTask} className="btn btn-primary btn-sm">{t('add') || 'Añadir'}</button>
+                    <button onClick={() => setIsAdding(false)} className="btn text-sm">{t('cancel')}</button>
+                    <button onClick={addTask} className="btn btn-primary btn-sm">{t('add')}</button>
                   </div>
                 </div>
               </div>
@@ -2063,7 +2063,7 @@ const TasksView = ({ state, setState, t }: any) => {
                   "text-[9px] uppercase font-bold tracking-wider",
                   task.priority === 'p1' ? "text-danger" : task.priority === 'p2' ? "text-warning" : "text-accent"
                 )}>
-                  {task.priority === 'p1' ? (t('p1') || 'Crítica') : task.priority === 'p2' ? (t('p2') || 'Importante') : (t('p3') || 'Normal')}
+                  {task.priority === 'p1' ? t('taskPriority_p1') : task.priority === 'p2' ? t('taskPriority_p2') : t('taskPriority_p3')}
                 </span>
               </div>
             </div>
@@ -2081,7 +2081,7 @@ const TasksView = ({ state, setState, t }: any) => {
         {filteredTasks.length === 0 && (
           <div className="text-center py-12 text-text-muted">
             <Target className="w-12 h-12 mx-auto mb-4 opacity-20" />
-            <p className="font-display font-medium uppercase tracking-widest text-xs">{t('noTasks') || 'No hay tareas que mostrar'}</p>
+            <p className="font-display font-medium uppercase tracking-widest text-xs">{t('taskNoTasks')}</p>
           </div>
         )}
       </div>
@@ -2126,7 +2126,7 @@ const TimerView = ({ state, setState, t }: any) => {
         />
         
         <div className="relative z-10">
-          <div className="text-[10px] text-text-muted font-bold uppercase tracking-widest mb-2">{t('focusSessionTitle') || 'Sesión de Enfoque'}</div>
+          <div className="text-[10px] text-text-muted font-bold uppercase tracking-widest mb-2">{t('focusSessionTitle')}</div>
           <div className="text-7xl font-display font-bold text-text-main tracking-tighter mb-8 transition-all duration-300">
             {formatTime(state.timerState.timeLeft)}
           </div>
@@ -2173,7 +2173,7 @@ const TimerView = ({ state, setState, t }: any) => {
                     : "bg-card border-border-main text-text-secondary hover:border-primary-light"
                 )}
               >
-                {mins}{t('minutesShort') || 'm'}
+                {mins}{t('minutesShort')}
               </button>
             ))}
           </div>
@@ -2221,7 +2221,7 @@ const BrainDumpView = ({ state, setState, navigateTo, t }: any) => {
         <textarea 
           value={text}
           onChange={e => setText(e.target.value)}
-          placeholder={t('brainDumpPlaceholder') || 'Vierte tus pensamientos sin filtro...'}
+          placeholder={t('braindumpPlaceholder')}
           className="w-full bg-transparent border-none text-lg font-medium outline-none placeholder:text-text-muted text-text-main min-h-[150px] resize-none"
         />
         <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-border-main">
@@ -2230,15 +2230,15 @@ const BrainDumpView = ({ state, setState, navigateTo, t }: any) => {
             onChange={e => setCategory(e.target.value as Category)}
             className="bg-hover border border-border-main rounded-xl px-4 py-2 text-xs font-semibold outline-none text-text-main"
           >
-            <option value="trabajo">💼 {t('cat_work') || 'Trabajo'}</option>
-            <option value="personal">🏠 {t('cat_personal') || 'Personal'}</option>
-            <option value="urgente">🔴 {t('cat_urgent') || 'Urgente'}</option>
-            <option value="idea">💡 {t('cat_idea') || 'Idea'}</option>
-            <option value="compra">🛒 {t('cat_shopping') || 'Compra'}</option>
+            <option value="trabajo">{t('braindumpCategory_trabajo')}</option>
+            <option value="personal">{t('braindumpCategory_personal')}</option>
+            <option value="urgente">{t('braindumpCategory_urgente')}</option>
+            <option value="idea">{t('braindumpCategory_idea')}</option>
+            <option value="compra">{t('braindumpCategory_compra')}</option>
           </select>
           <div className="flex-1" />
-          <button onClick={convertToTask} className="btn btn-secondary text-sm">📋 {t('convertToTask') || 'Convertir a Tarea'}</button>
-          <button onClick={addDump} className="btn btn-primary text-sm px-8">{t('save') || 'Guardar'}</button>
+          <button onClick={convertToTask} className="btn btn-secondary text-sm">{t('convertToTask')}</button>
+          <button onClick={addDump} className="btn btn-primary text-sm px-8">{t('save')}</button>
         </div>
       </div>
 
