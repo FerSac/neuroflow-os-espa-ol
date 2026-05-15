@@ -7,13 +7,20 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
-    base: mode === 'production' ? './' : '/',
+    base: './',
     build: {
+      target: 'esnext',
       minify: true,
       cssMinify: true,
       sourcemap: false,
       assetsInlineLimit: 100000000,
+      chunkSizeWarningLimit: 100000000,
       modulePreload: false,
+      rollupOptions: {
+        output: {
+          manualChunks: undefined,
+        },
+      },
     },
     plugins: [
       react(), 
@@ -22,10 +29,13 @@ export default defineConfig(({ mode }) => {
         removeViteModuleLoader: true,
       }),
       mode === 'production' && {
-        name: 'remove-module-type',
+        name: 'offline-compatibility',
         enforce: 'post',
         transformIndexHtml(html) {
-          return html.replace(/type="module" crossorigin/g, '');
+          return html
+            .replace(/type="module"/g, 'defer')
+            .replace(/crossorigin/g, '')
+            .replace(/rel="modulepreload"/g, 'rel="preload"');
         },
       },
     ].filter(Boolean),

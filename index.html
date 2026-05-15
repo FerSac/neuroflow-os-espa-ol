@@ -16,8 +16,36 @@
         <p style="font-size: 0.8rem; color: #9b8ec4;">Cargando sistema neurodivergente...</p>
       </div>
     </div>
+    <script>
+      // Fail-safe: Si después de 5 segundos sigue el overlay, mostrar un mensaje de ayuda
+      setTimeout(function() {
+        var overlay = document.getElementById('loading-overlay');
+        if (overlay && overlay.style.opacity !== '0') {
+          var details = overlay.querySelector('div');
+          if (details) {
+            details.innerHTML += '<p style="font-size: 0.7rem; color: #ef4444; margin-top: 20px;">' +
+              'Si la aplicación no carga, asegúrate de estar usando un navegador moderno.<br>' +
+              'Intenta abrir el archivo con Chrome o Edge.</p>';
+          }
+        }
+      }, 5000);
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Forzar la remoción del overlay cuando React cargue
+      window.addEventListener('load', function() {
+        // Un pequeño retraso para asegurar que React haya montado el root
+        setTimeout(function() {
+          var overlay = document.getElementById('loading-overlay');
+          if (overlay) {
+            overlay.style.transition = 'opacity 0.5s ease';
+            overlay.style.opacity = '0';
+            setTimeout(function() { overlay.remove(); }, 500);
+          }
+        }, 300);
+      });
+    </script>
   </body>
 </html>
 
