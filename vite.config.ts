@@ -28,16 +28,6 @@ export default defineConfig(({ mode }) => {
       viteSingleFile({
         removeViteModuleLoader: true,
       }),
-      mode === 'production' && {
-        name: 'offline-compatibility',
-        enforce: 'post',
-        transformIndexHtml(html) {
-          return html
-            .replace(/type="module"/g, 'defer')
-            .replace(/crossorigin/g, '')
-            .replace(/rel="modulepreload"/g, 'rel="preload"');
-        },
-      },
     ].filter(Boolean),
     define: {
       'process.env.NODE_ENV': JSON.stringify('production'),
