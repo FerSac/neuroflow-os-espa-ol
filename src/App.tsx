@@ -256,7 +256,7 @@ export default function App() {
             🧠
           </div>
           <div>
-            <div className="font-display font-bold text-text-main">NeuroFlow OS</div>
+            <div className="font-display font-bold text-text-main">NeuroFlow OS 2.5</div>
             <div className="text-[10px] text-text-muted font-normal uppercase tracking-wider">{t('adhdCommandCentre')}</div>
           </div>
         </div>
