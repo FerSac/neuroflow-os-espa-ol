@@ -50,7 +50,7 @@ import {
   Loader2,
   WifiOff
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { useAppState } from './hooks/useAppState';
 import { breakdownTask, summarizeBrainDump } from './lib/gemini';

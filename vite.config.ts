@@ -7,29 +7,31 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
-    base: './',
+    base: mode === 'production' ? './' : '/',
     build: {
       minify: true,
       cssMinify: true,
       sourcemap: false,
       assetsInlineLimit: 100000000,
+      modulePreload: false,
     },
     plugins: [
       react(), 
       tailwindcss(),
       viteSingleFile({
-        useRecommendedBuildConfig: true,
-        removeViteModuleLoader: false,
+        removeViteModuleLoader: true,
       }),
-    ],
+      mode === 'production' && {
+        name: 'remove-module-type',
+        enforce: 'post',
+        transformIndexHtml(html) {
+          return html.replace(/type="module" crossorigin/g, '');
+        },
+      },
+    ].filter(Boolean),
     define: {
       'process.env.NODE_ENV': JSON.stringify('production'),
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || process.env.GEMINI_API_KEY || ''),
-    },
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, '.'),
-      },
     },
     server: {
       hmr: process.env.DISABLE_HMR !== 'true',
