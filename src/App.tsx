@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   LayoutDashboard, 
   Rocket, 
@@ -20,6 +20,7 @@ import {
   AlertCircle, 
   ShieldCheck, 
   Users, 
+  User, 
   Trophy, 
   Plane, 
   Calendar,
@@ -131,6 +132,13 @@ const SidebarItem = ({
 
 export default function App() {
   const [state, setState, resetStorage] = useAppState();
+  const energyAvg = useMemo(() => {
+    const last7 = state.energyLogs.slice(-7);
+    if (last7.length === 0) return 0;
+    const sum = last7.reduce((acc: number, log: any) => acc + log.value, 0);
+    return Math.round((sum / last7.length) * 10) / 10;
+  }, [state.energyLogs]);
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifPanelOpen, setNotifPanelOpen] = useState(false);
 
@@ -331,11 +339,18 @@ export default function App() {
               onClick={() => navigateTo('energy')}
             >
               <Zap className="w-4 h-4 text-warning" />
-              <div className="w-16 h-1.5 bg-border-main rounded-full overflow-hidden">
+              <div className="w-16 h-1.5 bg-border-main rounded-full overflow-hidden relative">
                 <div 
                   className="h-full bg-linear-to-r from-danger via-warning to-accent transition-all duration-500" 
                   style={{ width: `${state.energyToday * 10}%` }}
                 />
+                {energyAvg > 0 && (
+                  <div 
+                    className="absolute top-0 bottom-0 w-0.5 bg-text-main/40 border-x border-white/20 z-10"
+                    style={{ left: `${energyAvg * 10}%` }}
+                    title={`Avg: ${energyAvg}`}
+                  />
+                )}
               </div>
               <span className="text-xs font-bold text-text-main">{state.energyToday}/10</span>
             </div>
@@ -575,6 +590,13 @@ const EnergyTrackerView = ({ state, setState, t }: any) => {
     setState((prev: any) => ({ ...prev, energyToday: val }));
   };
 
+  const calculateAverage = (logs: any[]) => {
+    const last7 = logs.slice(-7);
+    if (last7.length === 0) return 0;
+    const sum = last7.reduce((acc: number, log: any) => acc + log.value, 0);
+    return Math.round((sum / last7.length) * 10) / 10;
+  };
+
   const logEnergy = () => {
     const today = new Date().toDateString();
     const newLogs = [...state.energyLogs];
@@ -594,6 +616,10 @@ const EnergyTrackerView = ({ state, setState, t }: any) => {
     if (state.settings.sounds) playSound(660, 'sine', 0.2);
   };
 
+  const avg = calculateAverage(state.energyLogs);
+  const diff = state.energyToday - avg;
+  const statusKey = diff > 0 ? 'energyStatus_above' : diff < 0 ? 'energyStatus_below' : 'energyStatus_equal';
+
   return (
     <div className="space-y-6">
       <div className="card text-center p-10">
@@ -609,36 +635,102 @@ const EnergyTrackerView = ({ state, setState, t }: any) => {
           />
           <span className="text-2xl">🚀</span>
         </div>
-        <div className="text-6xl font-display font-bold text-primary mb-4">{state.energyToday}</div>
-        <button onClick={logEnergy} className="btn btn-primary px-8">{t('energyRegister')}</button>
+        <div className="text-7xl font-display font-bold text-primary mb-4 tabular-nums">{state.energyToday}</div>
+        <button onClick={logEnergy} className="btn btn-primary px-10 py-3 shadow-lg shadow-primary/20">{t('energyRegister')}</button>
       </div>
 
-      <div className="card">
-        <h3 className="font-display font-bold mb-6 flex items-center gap-2">
-          <Zap className="w-5 h-5 text-warning" /> {t('energyHistoryTitle')}
-        </h3>
-        <div className="flex items-end gap-3 h-48 pt-4 px-2">
-          {state.energyLogs.slice(-7).map((log: any, i: number) => (
-            <div key={i} className="flex-1 flex flex-col justify-end h-full group relative">
-              <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-text-main text-bg text-[10px] px-2 py-1 rounded-md pointer-events-none mb-1">
-                {log.value}/10
+      <div className="grid md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 card overflow-hidden relative group">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="font-mono font-bold text-sm tracking-tight flex items-center gap-2">
+              <Zap className="w-5 h-5 text-warning" /> {t('energyHistoryTitle').toUpperCase()}
+            </h3>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-primary" />
+                <span className="font-mono text-[10px] text-text-muted">{t('energyCurrent').toUpperCase()}</span>
               </div>
-              <motion.div 
-                initial={{ height: 0 }}
-                animate={{ height: `${Math.max(log.value * 10, 5)}%` }}
-                className="w-full bg-linear-to-t from-primary/30 to-primary rounded-t-lg transition-all duration-700 ease-out hover:from-primary/50" 
-              />
-              <span className="text-[10px] text-text-muted font-bold text-center mt-3 truncate">
-                {new Date(log.date).toLocaleDateString([], { weekday: 'short' })}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <div className="w-4 h-0.5 border-t border-dashed border-danger" />
+                <span className="font-mono text-[10px] text-text-muted">{t('energyAverage').toUpperCase()}</span>
+              </div>
             </div>
-          ))}
-          {state.energyLogs.length === 0 && (
-            <div className="w-full text-center text-text-muted py-20 text-xs flex flex-col items-center gap-2">
-              <Database className="w-8 h-8 opacity-20" />
-              {t('energyHistoryEmpty')}
+          </div>
+          
+          <div className="flex items-end gap-3 h-80 pt-4 pb-2 px-2 relative">
+            {/* Average Line */}
+            {avg > 0 && (
+              <div 
+                className="absolute left-0 right-0 border-t-2 border-dashed border-danger/40 z-10 transition-all duration-1000 group-hover:border-danger/80"
+                style={{ bottom: `${(avg / 10) * 100}%` }}
+              >
+                <div className="absolute -top-5 right-2 bg-danger text-white text-[9px] font-mono font-bold px-1.5 py-0.5 rounded shadow-sm">
+                  AVG: {avg}
+                </div>
+              </div>
+            )}
+
+            {Array.from({ length: 7 }).map((_, i) => {
+              const d = new Date();
+              d.setDate(d.getDate() - (6 - i));
+              const dateStr = d.toDateString();
+              const log = state.energyLogs.find((l: any) => l.date === dateStr);
+              const val = log ? log.value : 0;
+              const isToday = i === 6;
+
+              return (
+                <div key={i} className="flex-1 flex flex-col justify-end h-full group/bar relative">
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 transition-opacity bg-text-main text-white text-[10px] px-2 py-1 rounded shadow-lg z-20 pointer-events-none mb-1 tabular-nums">
+                    {val}/10
+                  </div>
+                  <motion.div 
+                    initial={{ height: 0 }}
+                    animate={{ height: `${Math.max((val / 10) * 100, 2)}%` }}
+                    className={cn(
+                      "w-full rounded-t-lg transition-all duration-700 ease-out shadow-sm",
+                      isToday 
+                        ? "bg-linear-to-t from-primary to-accent shadow-[0_0_15px_rgba(155,142,196,0.3)]" 
+                        : "bg-linear-to-t from-primary/10 to-primary/40 hover:from-primary/20 hover:to-primary/60"
+                    )} 
+                  />
+                  <div className={cn(
+                    "font-mono text-[9px] font-bold text-center mt-4 transition-colors",
+                    isToday ? "text-primary scale-110" : "text-text-muted"
+                  )}>
+                    {d.toLocaleDateString([], { weekday: 'short' }).toUpperCase()}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="card bg-linear-to-br from-card to-hover/10 flex flex-col items-center justify-center py-10 text-center border-border-main/50">
+            <div className="text-[10px] font-mono font-bold text-text-muted uppercase tracking-widest mb-2">{t('energyAverage')}</div>
+            <div className="text-5xl font-display font-bold text-text-main tabular-nums mb-1">{avg}</div>
+            <div className="text-[10px] font-mono font-bold text-primary/60 uppercase tracking-tighter">SURFACE LEVEL</div>
+          </div>
+
+          <div className={cn(
+            "card flex flex-col items-center justify-center py-10 text-center border-2",
+            diff > 0 ? "border-accent/40 bg-accent/5" : diff < 0 ? "border-danger/40 bg-danger/5" : "border-primary/20"
+          )}>
+            <div className="text-[10px] font-mono font-bold text-text-muted uppercase tracking-widest mb-4">{t('energyCurrent')} VS AVG</div>
+            <div className={cn(
+              "text-3xl font-display font-bold mb-2 tabular-nums flex items-center gap-2",
+              diff > 0 ? "text-accent" : diff < 0 ? "text-danger" : "text-primary"
+            )}>
+              {diff > 0 ? '+' : ''}{diff.toFixed(1)}
+              {diff > 0 ? <Zap className="w-5 h-5 fill-current" /> : diff < 0 ? <AlertTriangle className="w-5 h-5 fill-current" /> : null}
             </div>
-          )}
+            <div className={cn(
+              "text-[11px] font-bold uppercase tracking-wide px-3 py-1 rounded-full border",
+              diff > 0 ? "bg-accent text-white border-accent" : diff < 0 ? "bg-danger text-white border-danger" : "bg-primary text-white border-primary"
+            )}>
+              {t(statusKey)}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1111,6 +1203,22 @@ const SettingsView = ({ state, setState, resetStorage, t }: any) => {
 
   return (
     <div className="space-y-6">
+      <div className="card">
+        <h3 className="font-display font-bold mb-4 flex items-center gap-2">
+          <User className="w-5 h-5 text-primary" /> {t('userDisplayName')}
+        </h3>
+        <p className="text-[10px] text-text-muted mb-4 tracking-tight">{t('userDisplayNameHint')}</p>
+        <div className="flex gap-2">
+          <input 
+            type="text" 
+            value={state.settings.userName || ''} 
+            onChange={(e) => setState((prev: any) => ({ ...prev, settings: { ...prev.settings, userName: e.target.value } }))}
+            placeholder="..."
+            className="flex-1 bg-hover/50 border border-border-main rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+          />
+        </div>
+      </div>
+
       <div className="card">
         <h3 className="font-display font-bold mb-6 flex items-center gap-2">
           <Globe className="w-5 h-5 text-primary" /> {t('language')}
@@ -1875,6 +1983,48 @@ function renderView(state: any, setState: any, navigateTo: any, resetStorage: an
 const GuideView = ({ state, t }: any) => {
   return (
     <div className="space-y-8 max-w-2xl mx-auto py-4">
+      {/* Access and Installation Guide */}
+      <div className="card border-accent/30 bg-accent/5">
+        <h3 className="text-xl font-display font-bold mb-6 flex items-center gap-2 text-accent">
+          <Globe className="w-6 h-6" />
+          {t('guide_install_title')}
+        </h3>
+        <div className="space-y-4">
+          {[1, 2, 3, 4].map(num => (
+            <div key={num} className="flex gap-4 items-start bg-white/50 p-3 rounded-xl border border-border-main/20">
+              <div className="w-6 h-6 rounded-lg bg-accent text-white flex items-center justify-center shrink-0 font-bold text-xs">
+                {num}
+              </div>
+              <p className="text-xs text-text-main leading-relaxed">
+                {t(`guide_install_step${num}`)}
+              </p>
+            </div>
+          ))}
+        </div>
+        
+        <div className="mt-6 p-4 rounded-2xl bg-primary/10 border border-primary/20">
+          <div className="flex items-center gap-2 mb-2 text-primary font-bold text-sm">
+            <Database className="w-4 h-4" />
+            {t('single_file_info')}
+          </div>
+          <p className="text-[10px] text-text-secondary leading-relaxed mb-4">
+            {t('single_file_desc')}
+          </p>
+          
+          <a 
+            href="NeuroFlow_Offline_App_Final.html" 
+            download="NeuroFlow_Offline_App_Final.html"
+            className="flex items-center justify-center gap-2 w-full py-3 bg-primary text-white font-bold text-xs rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+          >
+            <Download className="w-4 h-4" />
+            {t('guide_download_btn')}
+          </a>
+          <p className="text-[9px] text-center text-text-muted mt-2 italic">
+            {t('guide_download_desc')}
+          </p>
+        </div>
+      </div>
+
       <div className="card bg-linear-to-br from-primary/10 to-accent/10 border-primary/20">
         <h3 className="text-xl font-display font-bold mb-4 flex items-center gap-2">
           <Rocket className="w-6 h-6 text-primary" />
@@ -1919,8 +2069,39 @@ const DashboardView = ({ state, setState, navigateTo, t }: any) => {
   const todayTasks = state.tasks.filter((t: any) => new Date(t.created).toDateString() === today);
   const completedToday = todayTasks.filter((t: any) => t.completed).length;
 
+  const hour = new Date().getHours();
+  const greetingKey = hour < 12 ? 'greetingMorning' : hour < 18 ? 'greetingAfternoon' : 'greetingEvening';
+  const name = state.settings.userName || 'Explorer';
+  
+  const formattedDate = new Intl.DateTimeFormat(state.settings.language === 'es' ? 'es-ES' : 'en-US', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long'
+  }).format(new Date());
+
+  const calculateAverage = (logs: any[]) => {
+    const last7 = logs.slice(-7);
+    if (last7.length === 0) return 0;
+    const sum = last7.reduce((acc: number, log: any) => acc + log.value, 0);
+    return Math.round((sum / last7.length) * 10) / 10;
+  };
+
+  const avg = calculateAverage(state.energyLogs);
+  const diff = state.energyToday - avg;
+
   return (
     <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 py-2 px-1">
+        <div>
+          <h2 className="text-3xl font-display font-bold text-text-main">
+            {t(greetingKey)}, <span className="text-primary">{name}</span>.
+          </h2>
+          <p className="text-sm text-text-muted font-medium capitalize mt-1">
+            {formattedDate}
+          </p>
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: t('statTasksToday'), value: todayTasks.length, icon: Target },
@@ -1928,7 +2109,7 @@ const DashboardView = ({ state, setState, navigateTo, t }: any) => {
           { label: t('statFocusMinutes'), value: state.timerState.totalFocusMinutes, icon: Timer },
           { label: t('statWinsToday'), value: state.wins.filter((w: any) => new Date(w.date).toDateString() === today).length, icon: Trophy }
         ].map((stat, idx) => (
-          <div key={idx} className="bg-card border border-border-main p-4 rounded-xl text-center">
+          <div key={idx} className="bg-card border border-border-main p-4 rounded-xl text-center shadow-xs">
             <stat.icon className="w-5 h-5 mx-auto mb-2 text-text-muted" />
             <div className="text-2xl font-display font-bold text-text-main">{stat.value}</div>
             <div className="text-[10px] text-text-muted uppercase tracking-wider">{stat.label}</div>
@@ -1936,67 +2117,112 @@ const DashboardView = ({ state, setState, navigateTo, t }: any) => {
         ))}
       </div>
 
-      {state.dailyPriority && (
-        <div className="bg-linear-to-r from-primary-light/30 to-secondary-light/30 rounded-2xl p-6 text-center border border-primary-light/20 shadow-sm">
-          <div className="text-[10px] uppercase tracking-widest font-bold text-primary mb-2">🎯 {t('dailyPriorityTitle')}</div>
-          <div className="text-xl font-display font-bold text-text-main">{state.dailyPriority}</div>
-        </div>
-      )}
+      <div className="grid md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 space-y-6">
+          {state.dailyPriority && (
+            <div className="bg-linear-to-r from-primary-light/30 to-secondary-light/30 rounded-2xl p-6 text-center border border-primary-light/20 shadow-sm">
+              <div className="text-[10px] uppercase tracking-widest font-bold text-primary mb-2">🎯 {t('dailyPriorityTitle')}</div>
+              <div className="text-xl font-display font-bold text-text-main">{state.dailyPriority}</div>
+            </div>
+          )}
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="card">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-display font-bold flex items-center gap-2">
-              <Target className="w-5 h-5 text-primary" /> {t('taskPending')}
-            </h3>
-            <button onClick={() => navigateTo('tasks')} className="text-xs font-semibold text-primary">{t('taskAll')}</button>
-          </div>
-          <div className="space-y-2">
-            {state.tasks.filter((t: any) => !t.completed).slice(0, 5).map((task: any) => (
-              <div 
-                key={task.id} 
-                className="flex items-center gap-3 p-3 border border-border-main rounded-xl hover:bg-hover cursor-pointer transition-colors"
-                onClick={() => {
-                  const newTasks = state.tasks.map((t: any) => t.id === task.id ? { ...t, completed: true } : t);
-                  setState((prev: any) => ({ ...prev, tasks: newTasks }));
-                }}
-              >
-                <div className="w-5 h-5 border-2 border-border-main rounded-full" />
-                <span className="text-sm font-medium">{task.text}</span>
-              </div>
-            ))}
-          {state.tasks.filter((t: any) => !t.completed).length === 0 && (
-              <div className="text-center py-8 text-text-muted">
-                <CheckCircle2 className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                <p className="text-xs uppercase font-bold tracking-widest">{t('noTasksClear')}</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-display font-bold flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-secondary" /> {t('winsRecent')}
-            </h3>
-            <button onClick={() => navigateTo('wins')} className="text-xs font-semibold text-primary">{t('winsJournal')}</button>
-          </div>
-          <div className="space-y-2">
-            {state.wins.slice(0, 3).map((win: any) => (
-              <div key={win.id} className="flex gap-3 p-3 bg-card border border-border-main rounded-xl border-l-4 border-l-accent shadow-xs group cursor-pointer hover:bg-hover transition-colors" onClick={() => navigateTo('wins')}>
-                <span className="text-lg group-hover:scale-110 transition-transform">✨</span>
-                <div>
-                  <div className="text-xs font-semibold text-text-main">{win.text}</div>
-                  <div className="text-[10px] text-text-secondary font-medium">{new Date(win.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+          <div className="card cursor-pointer hover:border-primary/40 transition-all group" onClick={() => navigateTo('energy')}>
+             <div className="flex items-center justify-between mb-4">
+                <h3 className="font-mono font-bold text-xs tracking-tight flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-warning" /> {t('energyHistoryTitle').toUpperCase()}
+                </h3>
+                <div className="flex items-center gap-2">
+                   <div className={cn(
+                     "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                     diff > 0 ? "bg-accent/10 text-accent" : diff < 0 ? "bg-danger/10 text-danger" : "bg-primary/10 text-primary"
+                   )}>
+                     {diff > 0 ? '↑' : diff < 0 ? '↓' : '•'} {Math.abs(diff).toFixed(1)} {t('energyCurrent')} vs {avg} {t('energyAverage')}
+                   </div>
+                   <ChevronRight className="w-4 h-4 text-text-muted group-hover:translate-x-1 transition-transform" />
                 </div>
-              </div>
-            ))}
-            {state.wins.length === 0 && (
-              <div className="text-center py-8 text-text-muted">
-                <Trophy className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                <p className="text-xs uppercase font-bold tracking-widest">{t('winsEmpty')}</p>
-              </div>
-            )}
+             </div>
+             
+             <div className="flex items-end gap-2 h-24 pt-2">
+                {Array.from({ length: 14 }).map((_, i) => {
+                  const d = new Date();
+                  d.setDate(d.getDate() - (13 - i));
+                  const dateStr = d.toDateString();
+                  const log = state.energyLogs.find((l: any) => l.date === dateStr);
+                  const val = log ? log.value : 0;
+                  return (
+                    <div key={i} className="flex-1 h-full flex flex-col justify-end group/item">
+                      <motion.div 
+                        initial={{ scaleY: 0 }}
+                        animate={{ scaleY: 1 }}
+                        className={cn(
+                          "w-full rounded-t-sm transition-all duration-500 origin-bottom",
+                          val === 0 ? "h-[5%] bg-border-main/20" : "bg-primary/40 group-hover/item:bg-primary",
+                          i === 13 && "bg-linear-to-t from-primary to-accent active-bar"
+                        )}
+                        style={{ height: val > 0 ? `${(val / 10) * 100}%` : undefined }}
+                      />
+                    </div>
+                  );
+                })}
+             </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="card">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-display font-bold flex items-center gap-2">
+                <Target className="w-5 h-5 text-primary" /> {t('taskPending')}
+              </h3>
+              <button onClick={() => navigateTo('tasks')} className="text-xs font-semibold text-primary">{t('taskAll')}</button>
+            </div>
+            <div className="space-y-2">
+              {state.tasks.filter((t: any) => !t.completed).slice(0, 5).map((task: any) => (
+                <div 
+                  key={task.id} 
+                  className="flex items-center gap-3 p-3 border border-border-main rounded-xl hover:bg-hover cursor-pointer transition-colors"
+                  onClick={() => {
+                    const newTasks = state.tasks.map((t: any) => t.id === task.id ? { ...t, completed: true } : t);
+                    setState((prev: any) => ({ ...prev, tasks: newTasks }));
+                  }}
+                >
+                  <div className="w-5 h-5 border-2 border-border-main rounded-full" />
+                  <span className="text-sm font-medium">{task.text}</span>
+                </div>
+              ))}
+            {state.tasks.filter((t: any) => !t.completed).length === 0 && (
+                <div className="text-center py-8 text-text-muted">
+                  <CheckCircle2 className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                  <p className="text-xs uppercase font-bold tracking-widest">{t('noTasksClear')}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-display font-bold flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-secondary" /> {t('winsRecent')}
+              </h3>
+              <button onClick={() => navigateTo('wins')} className="text-xs font-semibold text-primary">{t('winsJournal')}</button>
+            </div>
+            <div className="space-y-2">
+              {state.wins.slice(0, 3).map((win: any) => (
+                <div key={win.id} className="flex gap-3 p-3 bg-card border border-border-main rounded-xl border-l-4 border-l-accent shadow-xs group cursor-pointer hover:bg-hover transition-colors" onClick={() => navigateTo('wins')}>
+                  <span className="text-lg group-hover:scale-110 transition-transform">✨</span>
+                  <div>
+                    <div className="text-xs font-semibold text-text-main">{win.text}</div>
+                    <div className="text-[10px] text-text-secondary font-medium">{new Date(win.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                  </div>
+                </div>
+              ))}
+              {state.wins.length === 0 && (
+                <div className="text-center py-8 text-text-muted">
+                  <Trophy className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                  <p className="text-xs uppercase font-bold tracking-widest">{t('winsEmpty')}</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

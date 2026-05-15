@@ -120,6 +120,17 @@ export const translations = {
     offlineTitle: "Uso sin Internet",
     offlineDesc: "Una vez que la aplicación carga por primera vez, puedes seguir añadiendo y completando tareas sin conexión a internet.",
 
+    // Installation & Shared Guide
+    guide_install_title: "Guía de Inicio y Acceso",
+    guide_install_step1: "Para usar NeuroFlow, simplemente accede al enlace de Vercel. Puedes guardarlo en tus marcadores.",
+    guide_install_step2: "Para acceso offline 'de por vida', puedes descargar el archivo NeuroFlow_Offline_App_Final.html. Ábrelo con doble clic en cualquier navegador.",
+    guide_install_step3: "Tus datos se guardan en el navegador. Si usas diferentes dispositivos, usa el botón 'Exportar Datos' en ajustes y luego 'Importar' en el nuevo dispositivo.",
+    guide_install_step4: "Confirmado: 100% Funcional sin internet una vez cargue por primera vez o usando el archivo local.",
+    single_file_info: "¿Cómo obtener el archivo offline?",
+    single_file_desc: "El archivo NeuroFlow_Offline_App_Final.html es una versión completa de la aplicación que puedes usar sin internet. Se genera automáticamente en cada descarga.",
+    guide_download_btn: "Descargar Aplicación Offline (.html)",
+    guide_download_desc: "Obtén la versión autónoma completa para usar NeuroFlow 'de por vida' sin depender de un servidor.",
+
     // Notifications & Tips
     definePriority: "Define tu Prioridad",
     definePriorityDesc: "Un enfoque claro reduce la ansiedad.",
@@ -157,6 +168,11 @@ export const translations = {
     statCompleted: "Completadas",
     statFocusMinutes: "Min Foco",
     statWinsToday: "Wins Hoy",
+    greetingMorning: "Buenos días",
+    greetingAfternoon: "Buenas tardes",
+    greetingEvening: "Buenas noches",
+    userDisplayName: "Tu Nombre",
+    userDisplayNameHint: "¿Cómo quieres que te llamemos?",
     dailyPriorityTitle: "Prioridad de Hoy",
     noTasksClear: "¡Todo despejado!",
     winsRecent: "Wins Recientes",
@@ -199,6 +215,11 @@ export const translations = {
     energyRegister: "Registrar Energía",
     energyHistoryTitle: "Historial de Energía (Últimos 7 días)",
     energyHistoryEmpty: "Pulse \"Registrar Energía\" para ver su evolución",
+    energyCurrent: "Energía Actual",
+    energyAverage: "Promedio 7 días",
+    energyStatus_above: "Por encima del promedio",
+    energyStatus_below: "Por debajo del promedio",
+    energyStatus_equal: "Igual al promedio",
 
     // Dopamine Menu View
     dopamineAsk: "¿Batería social o mental baja? Elige un booster saludable.",
@@ -518,6 +539,17 @@ export const translations = {
     offlineTitle: "Offline Usage",
     offlineDesc: "Once the app loads for the first time, you can continue adding and completing tasks without an internet connection.",
 
+    // Installation & Shared Guide
+    guide_install_title: "Setup & Access Guide",
+    guide_install_step1: "To use NeuroFlow, simply access the Vercel link. You can save it in your bookmarks.",
+    guide_install_step2: "For 'lifetime' offline access, you can download the NeuroFlow_Offline_App_Final.html file. Open it with a double click in any browser.",
+    guide_install_step3: "Your data is stored in the browser. If you use different devices, use 'Export Data' in settings and then 'Import' on the new device.",
+    guide_install_step4: "Confirmed: 100% functional without internet once loaded for the first time or using the local file.",
+    single_file_info: "How to get the offline file?",
+    single_file_desc: "The NeuroFlow_Offline_App_Final.html file is a complete version of the app that you can use without internet. It's generated automatically for each download.",
+    guide_download_btn: "Download Offline App (.html)",
+    guide_download_desc: "Get the complete standalone version to use NeuroFlow 'for life' without depending on a server.",
+
     // Notifications & Tips
     definePriority: "Define your Priority",
     definePriorityDesc: "A clear focus reduces anxiety.",
@@ -555,6 +587,11 @@ export const translations = {
     statCompleted: "Completed",
     statFocusMinutes: "Focus Mins",
     statWinsToday: "Wins Today",
+    greetingMorning: "Good morning",
+    greetingAfternoon: "Good afternoon",
+    greetingEvening: "Good evening",
+    userDisplayName: "Your Name",
+    userDisplayNameHint: "How should we call you?",
     dailyPriorityTitle: "Today's Priority",
     noTasksClear: "All clear!",
     winsRecent: "Recent Wins",
@@ -597,6 +634,11 @@ export const translations = {
     energyRegister: "Register Energy",
     energyHistoryTitle: "Energy History (Last 7 days)",
     energyHistoryEmpty: "Press \"Register Energy\" to see your evolution",
+    energyCurrent: "Current Energy",
+    energyAverage: "7-day Average",
+    energyStatus_above: "Above average",
+    energyStatus_below: "Below average",
+    energyStatus_equal: "Same as average",
 
     // Dopamine Menu View
     dopamineAsk: "Social or mental battery low? Choose a healthy booster.",

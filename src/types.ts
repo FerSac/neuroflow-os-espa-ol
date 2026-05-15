@@ -98,6 +98,7 @@ export interface AppState {
     timerDuration: number;
     bodyDoubleType: 'focus' | 'calm' | 'cheer';
     language: 'es' | 'en';
+    userName: string;
   };
   dailyPriority: string;
   launchCompleted: boolean;
@@ -133,7 +134,8 @@ export const INITIAL_STATE: AppState = {
                 confetti: true,
                 timerDuration: 25,
                 bodyDoubleType: 'focus',
-                language: 'en'
+                language: 'en',
+                userName: 'Explorer'
   },
   dailyPriority: '',
   launchCompleted: false,

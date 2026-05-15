@@ -1,9 +1,21 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiInstance: GoogleGenAI | null = null;
+
+function getAi() {
+  if (!aiInstance) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY is missing. Please check your environment variables.");
+    }
+    aiInstance = new GoogleGenAI({ apiKey });
+  }
+  return aiInstance;
+}
 
 export async function breakdownTask(taskTitle: string, lang: 'es' | 'en' = 'en') {
   try {
+    const ai = getAi();
     const languageName = lang === 'es' ? 'Spanish' : 'English';
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
@@ -37,6 +49,7 @@ export async function breakdownTask(taskTitle: string, lang: 'es' | 'en' = 'en')
 
 export async function summarizeBrainDump(text: string, lang: 'es' | 'en' = 'en') {
   try {
+    const ai = getAi();
     const languageName = lang === 'es' ? 'Spanish' : 'English';
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
